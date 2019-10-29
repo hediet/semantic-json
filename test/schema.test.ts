@@ -1,0 +1,3 @@
+describe("Schema", () => {
+	it("works", () => {});
+});
