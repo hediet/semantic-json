@@ -9,11 +9,13 @@ import {
 	sArray,
 	namespace,
 } from "../src";
-import { sTypePackage } from "../src/schema/typeDefs";
+import { sTypePackage } from "../src/schema/typeDefsSerializer";
 import { TypeSystem } from "../src/schema/types";
+import { deserializationValue } from "../src/result";
 
 describe("Serialization Schema", () => {
 	it("works", () => {
+		debugger;
 		class ContactBook {
 			public contacts = new Array<Contact>();
 		}
@@ -41,7 +43,7 @@ describe("Serialization Schema", () => {
 					const c = new Contact();
 					c.firstName = v.firstName;
 					c.lastName = v.lastName;
-					return { kind: "successful", result: c };
+					return deserializationValue(c);
 				},
 				serialize: v => ({
 					firstName: v.firstName,
@@ -60,25 +62,27 @@ describe("Serialization Schema", () => {
 				deserialize: v => {
 					const c = new ContactBook();
 					c.contacts = v.contacts;
-					return { kind: "successful", result: c };
+					return deserializationValue(c);
 				},
 				serialize: v => ({ contacts: v.contacts }),
 			})
 			.defineAs(contactBookNs("ContactBook"));
 
-		const r = sContactBook.deserializeTyped({
-			...{
-				$ns: { t: contactBookNs.namespace },
-				$type: "t#ContactBook",
-			},
-			contacts: [
-				{
-					...{ $type: "t#Contact" },
-					firstName: "John",
-					lastName: "Doe",
+		const r = sContactBook
+			.deserializeTyped({
+				...{
+					$ns: { t: contactBookNs.namespace },
+					$type: "t#ContactBook",
 				},
-			],
-		});
+				contacts: [
+					{
+						...{ $type: "t#Contact" },
+						firstName: "John",
+						lastName: "Doe",
+					},
+				],
+			})
+			.unwrap();
 
 		const ts = new TypeSystem();
 		const t = sContactBook.getType(ts);
@@ -87,22 +91,15 @@ describe("Serialization Schema", () => {
 			const pkg = ts.toPackage(ns);
 			const j = sTypePackage.serialize(pkg);
 
-			const t = sTypePackage.deserialize(j);
-			if (t.kind === "successful") {
-				const ts2 = new TypeSystem();
-				t.result.addToTypeSystem(ts2);
-				debugger;
-			}
+			const t = sTypePackage.deserialize(j).unwrap();
+
+			const ts2 = new TypeSystem();
+			t.addToTypeSystem(ts2);
+
 			debugger;
 		}
 
-		debugger;
-
-		if (r.kind !== "successful") {
-			throw new Error();
-		}
-
-		if (r.result.contacts[0].name !== "John Doe") {
+		if (r.contacts[0].name !== "John Doe") {
 			throw new Error();
 		}
 	});
@@ -135,7 +132,7 @@ describe("Serialization Schema", () => {
 			},
 		});
 
-		if (r.kind === "successful") {
+		/*if (r.kind === "successful") {
 			const res = r.result;
 			const usedNs = res.getUsedNamespaces();
 
@@ -143,12 +140,13 @@ describe("Serialization Schema", () => {
 			res.addToTypeSystem(ts);
 
 			debugger;
-		}
+		}*/
 	});
 });
 
 describe("Serialization", () => {
 	it("works", () => {
+		/*
 		class Foo {
 			constructor(
 				public readonly x: string,
@@ -186,6 +184,6 @@ describe("Serialization", () => {
 		if (r.kind === "successful") {
 			const obj = r.result;
 			obj;
-		}
+		}*/
 	});
 });

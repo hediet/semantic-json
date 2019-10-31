@@ -13,6 +13,8 @@ import {
 	IntersectionTypeDef,
 	UnionTypeDef,
 	TypeRefDef,
+	LiteralTypeDef,
+	AnyTypeDef,
 } from "./typeDefs";
 
 export class TypeSystem {
@@ -64,6 +66,8 @@ export type Type =
 	| StringType
 	| BooleanType
 	| NumberType
+	| AnyType
+	| LiteralType
 	| ObjectType
 	| ArrayType
 	| CustomType
@@ -153,11 +157,31 @@ export class NumberType extends BaseType {
 	}
 }
 
+export class AnyType extends BaseType {
+	public readonly kind = "any";
+
+	public toTypeDef(): TypeDef {
+		return new AnyTypeDef();
+	}
+}
+
 export class BooleanType extends BaseType {
 	public readonly kind = "boolean";
 
 	public toTypeDef(): TypeDef {
 		return new BooleanTypeDef();
+	}
+}
+
+export class LiteralType extends BaseType {
+	public readonly kind = "literal";
+
+	constructor(public readonly value: string | number | boolean) {
+		super();
+	}
+
+	public toTypeDef(): TypeDef {
+		return new LiteralTypeDef(this.value);
 	}
 }
 
@@ -173,11 +197,7 @@ export class ObjectType extends BaseType {
 			Object.fromEntries(
 				Object.entries(this.properties).map(([name, prop]) => [
 					name,
-					new ObjectPropertyDef(
-						prop.type.toTypeDef(),
-						prop.optional,
-						prop.defaultValue
-					),
+					prop.toObjectPropertyDef(),
 				])
 			)
 		);
@@ -191,6 +211,14 @@ export class ObjectProperty {
 		public readonly optional: boolean,
 		public readonly defaultValue: JSONValue | undefined
 	) {}
+
+	public toObjectPropertyDef(): ObjectPropertyDef {
+		return new ObjectPropertyDef(
+			this.type.toTypeDef(),
+			this.optional,
+			this.defaultValue
+		);
+	}
 }
 
 export class MapType extends BaseType {

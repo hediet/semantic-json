@@ -16,9 +16,18 @@ import {
 	NumberType,
 	StringType,
 	MapType,
+	LiteralType,
+	AnyType,
 } from "../schema/types";
 import { NamespacedName, Namespace } from "..";
 import { namespace } from "../NamespacedNamed";
+import {
+	DeserializationResult,
+	deserializationValue,
+	deserializationError,
+	ErrorDeserializationResult,
+	DeserializationError,
+} from "../result";
 
 export class DowncastSerializer<T extends JSONValue> extends BaseSerializer<
 	T,
@@ -33,14 +42,17 @@ export class DowncastSerializer<T extends JSONValue> extends BaseSerializer<
 	}
 
 	public deserializeWithContext(value: JSONValue): DeserializationResult<T> {
-		return { kind: "successful", result: value as T };
+		return deserializationValue(value as T);
+	}
+
+	public getType(typeSystem: TypeSystem): Type {
+		return new AnyType();
 	}
 }
 
-export class LiteralSerializer<T extends JSONValue> extends BaseSerializer<
-	T,
-	T
-> {
+export class LiteralSerializer<
+	T extends string | number | boolean
+> extends BaseSerializer<T, T> {
 	constructor(public readonly value: T) {
 		super();
 	}
@@ -55,18 +67,20 @@ export class LiteralSerializer<T extends JSONValue> extends BaseSerializer<
 
 	public deserializeWithContext(value: JSONValue): DeserializationResult<T> {
 		if (value !== this.value) {
-			return singleError(
-				new ConversionError({
-					message: `Expected "${this.value}" but got "${value}".`,
-				})
-			);
+			return deserializationError({
+				message: `Expected "${this.value}" but got "${value}".`,
+			});
 		}
 
-		return { kind: "successful", result: value as T };
+		return deserializationValue(value as T);
+	}
+
+	public getType(typeSystem: TypeSystem): Type {
+		return new LiteralType(this.value);
 	}
 }
 
-export function sLiteral<T extends JSONValue>(
+export function sLiteral<T extends string | number | boolean>(
 	literal: T
 ): LiteralSerializer<T> {
 	return new LiteralSerializer(literal);
@@ -93,16 +107,14 @@ export class TypeSerializer<
 		value: JSONValue
 	): DeserializationResult<TypeNames[TTypeName]> {
 		if (!this.canSerialize(value)) {
-			return singleError(
-				new ConversionError({
-					message: `Expected a ${
-						this.typeName
-					} but got a ${typeof value}.`,
-				})
-			);
+			return deserializationError({
+				message: `Expected a ${
+					this.typeName
+				} but got a ${typeof value}.`,
+			});
 		}
 
-		return { kind: "successful", result: value };
+		return deserializationValue(value);
 	}
 
 	public serializeWithContext(value: TypeNames[TTypeName]): JSONValue {
@@ -165,30 +177,24 @@ export class MapSerializer<
 		context: DeserializeContext
 	): DeserializationResult<{ [key: string]: TValue }> {
 		if (typeof value !== "object" || value === null) {
-			return singleError(
-				new ConversionError({
-					message: `Expected an object, but got ${typeof value}.`,
-				})
-			);
+			return deserializationError({
+				message: `Expected an object, but got ${typeof value}.`,
+			});
 		}
 
 		const result: { [key: string]: TValue } = {};
 
 		for (const [key, val] of Object.entries(value)) {
 			const r = this.itemSerializer.deserializeWithContext(val!, context);
-			if (r.kind === "error") {
-				return {
-					kind: "error",
-					errors: r.errors.map(e => e.prependPath(key)),
-				};
+			if (!r.isOk) {
+				return deserializationError(
+					...r.errors.map(e => e.prependPath(key))
+				);
 			}
-			result[key] = r.result;
+			result[key] = r.value;
 		}
 
-		return {
-			kind: "successful",
-			result,
-		};
+		return deserializationValue(result);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {
@@ -264,31 +270,29 @@ export class ArraySerializer<
 		context: DeserializeContext
 	): DeserializationResult<TValue[]> {
 		if (!(value instanceof Array)) {
-			return singleError(
-				new ConversionError({
-					message: `Expected an array but got a ${typeof value}.`,
-				})
-			);
+			return deserializationError({
+				message: `Expected an array but got a ${typeof value}.`,
+			});
 		}
-		const errors = new ErrorCollector();
+		const errors = new Array<DeserializationError>();
 		const result = new Array<TValue>(value.length);
 		for (let i = 0; i < value.length; i++) {
 			const r = this.itemSerializer.deserializeWithContext(
 				value[i],
 				context
 			);
-			if (r.kind === "error") {
+			if (!r.isOk) {
 				errors.push(...r.errors.map(e => e.prependPath(i)));
 			} else {
-				result[i] = r.result;
+				result[i] = r.value;
 			}
 		}
 
-		if (errors.hasErrors) {
-			return errors;
+		if (errors.length > 0) {
+			return deserializationError(...errors);
 		}
 
-		return { kind: "successful", result };
+		return deserializationValue(result);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {
@@ -317,20 +321,23 @@ export class UnionSerializer<
 				return s.serializeWithContext(value, context);
 			}
 		}
-		throw new Error();
+		throw new Error("No serializer could deserialize the given value");
 	}
 
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
 	): DeserializationResult<TValue> {
+		const results = new Array<ErrorDeserializationResult>();
 		for (const s of this.serializers) {
 			const result = s.deserializeWithContext(value, context);
-			if (result.kind === "successful") {
+			if (result.isOk) {
 				return result;
+			} else {
+				results.push(result);
 			}
 		}
-		throw new Error();
+		throw new Error("No serializer could deserialize the given value");
 	}
 
 	public getType(typeSystem: TypeSystem): Type {
@@ -370,9 +377,7 @@ export class NamespacedNameSerializer extends BaseSerializer<
 		context: DeserializeContext
 	): DeserializationResult<NamespacedName> {
 		if (typeof value !== "string") {
-			return singleError(
-				new ConversionError({ message: "must be of type string" })
-			);
+			return deserializationError({ message: "must be of type string" });
 		}
 		const regExp = /(.*)#(.*)/;
 		const m = regExp.exec(value);
@@ -380,7 +385,7 @@ export class NamespacedNameSerializer extends BaseSerializer<
 			const nsPrefix = m[1];
 			const name = m[2];
 			const ns = context.lookupNamespace(nsPrefix);
-			return ok(ns(name));
+			return deserializationValue(ns(name));
 		} else {
 			throw new Error(`Malformed type "${value}"`);
 		}
@@ -409,12 +414,10 @@ export class NamespaceSerializer extends BaseSerializer<Namespace, string> {
 		context: DeserializeContext
 	): DeserializationResult<Namespace> {
 		if (typeof value !== "string") {
-			return singleError(
-				new ConversionError({ message: "must be of type string" })
-			);
+			return deserializationError({ message: "must be of type string" });
 		}
 		const ns = context.lookupNamespace(value);
-		return ok(ns);
+		return deserializationValue(ns);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {

@@ -29,7 +29,7 @@ export class FieldInfo<
 	TSource extends JSONValue = any,
 	TKind extends FieldKind = FieldKind
 > {
-	get type(): FieldType<TValue, TSource, TKind> {
+	get T(): FieldType<TValue, TSource, TKind> {
 		throw new Error("Not meant to be accessed at runtime!");
 	}
 
@@ -114,6 +114,7 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 						})
 					);
 				} else if (field.defaultValue) {
+					debugger;
 					result[fieldName] = field.defaultValue.value;
 				}
 			} else {
@@ -176,9 +177,12 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 			Object.fromEntries(
 				Object.entries(this.properties).map(([key, val]) => [
 					key,
-					{
-						type: val.serializer.getType(typeSystem),
-					} as ObjectProperty,
+					new ObjectProperty(
+						key,
+						val.serializer.getType(typeSystem),
+						val.isOptional,
+						val.defaultValue
+					),
 				])
 			)
 		);
@@ -265,7 +269,7 @@ export type ObjectTypeCtor<T extends FieldsOptions> = AsFields<
 		}
 			? FieldType<T[TKey]["TValue"], T[TKey]["TSource"], "ordinary">
 			: T[TKey] extends FieldInfo<any>
-			? T[TKey]["type"]
+			? T[TKey]["T"]
 			: never;
 	}
 >;
