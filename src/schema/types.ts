@@ -57,6 +57,14 @@ export class TypeSystem {
 		const result = new TypePackageDef(ns, definitions);
 		return result;
 	}
+
+	public definedPackages(): TypePackageDef[] {
+		const result = new Array<TypePackageDef>();
+		for (const ns of this.definedNamespaces()) {
+			result.push(this.toPackage(ns));
+		}
+		return result;
+	}
 }
 
 export type Type =
@@ -73,11 +81,23 @@ export type Type =
 	| CustomType
 	| MapType;
 
+export type Exclude<
+	TType extends Type,
+	T extends Type["kind"]
+> = TType extends { kind: T } ? never : TType;
+export type ExcludeType<T extends Type["kind"]> = Exclude<Type, T>;
+
 export abstract class BaseType {
 	public abstract toTypeDef(): TypeDef;
+
+	public resolveUnion(): ExcludeType<"definition" | "union">[] {
+		return [this as any];
+	}
 }
 
 export class TypeDefinition extends BaseType {
+	public readonly kind = "definition";
+
 	private _definition: Type | undefined;
 
 	public get isDefined(): boolean {
@@ -95,6 +115,10 @@ export class TypeDefinition extends BaseType {
 		this._definition = newDefinition;
 	}
 
+	public resolveUnion(): ExcludeType<"definition" | "union">[] {
+		return this.definition.resolveUnion();
+	}
+
 	constructor(
 		public readonly namespacedName: NamespacedName,
 		definition: Type | undefined
@@ -110,6 +134,7 @@ export class TypeDefinition extends BaseType {
 }
 
 export class CustomType extends BaseType {
+	public readonly kind = "custom";
 	constructor(public readonly type: NamespacedName) {
 		super();
 	}
@@ -127,6 +152,12 @@ export class UnionType extends BaseType {
 
 	public toTypeDef(): TypeDef {
 		return new UnionTypeDef(this.of.map(t => t.toTypeDef()));
+	}
+
+	public resolveUnion(): ExcludeType<"definition" | "union">[] {
+		return new Array<ExcludeType<"definition" | "union">>().concat(
+			...this.of.map(t => t.resolveUnion())
+		);
 	}
 }
 

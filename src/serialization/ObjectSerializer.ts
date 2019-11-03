@@ -308,7 +308,7 @@ export function field(
 		"(not set yet)",
 		options.serializer,
 		options.description,
-		options.optional !== false,
+		!!options.optional,
 		defaultVal
 	);
 }

@@ -1,6 +1,6 @@
 import { JSONValue } from "../JSONValue";
 import { NamespacedName, Namespace, namespace } from "../NamespacedNamed";
-import { Type, TypeSystem } from "../schema/types";
+import { Type, TypeSystem, TypeDefinition } from "../schema/types";
 import { DeserializationResult } from "../result";
 
 export class DeserializeContext {
@@ -293,7 +293,7 @@ export class NamedSerializer<
 		return super.deserializeWithContext(value, context);
 	}
 
-	public getType(typeSystem: TypeSystem): Type {
+	public getType(typeSystem: TypeSystem): TypeDefinition {
 		if (
 			this.isDefinition &&
 			!typeSystem.isTypeDefined(this.namespacedName)

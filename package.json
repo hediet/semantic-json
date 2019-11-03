@@ -1,11 +1,13 @@
 {
 	"name": "@hediet/semantic-json",
-	"version": "0.1.0",
-	"description": "",
+	"version": "0.0.1",
+	"description": "Highly experimental. Do not use yet.",
 	"scripts": {
 		"dev": "tsc --watch",
 		"test": "mocha --require source-map-support/register dist/test/**/*.js"
 	},
+	"main": "./dist/src/index.js",
+	"types": "./dist/src/index.d.ts",
 	"author": "Henning Dieterichs",
 	"license": "MIT",
 	"dependencies": {},
