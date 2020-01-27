@@ -46,7 +46,7 @@ const sUnionType = sObject({
 		serialize: val => ({ kind: val.kind, of: val.of }),
 		deserialize: val => deserializationValue(new UnionTypeDef(val.of)),
 	})
-	.defineAs(typeDefinitionNs("StringType"));
+	.defineAs(typeDefinitionNs("UnionType"));
 
 const sIntersectionType = sArray(typeRef)
 	.refine<IntersectionTypeDef>({
@@ -120,7 +120,7 @@ const sLiteralType = sObject({
 		serialize: val => ({ kind: val.kind, value: val.value }),
 		deserialize: val => deserializationValue(new LiteralTypeDef(val.value)),
 	})
-	.defineAs(typeDefinitionNs("BooleanType"));
+	.defineAs(typeDefinitionNs("LiteralType"));
 
 const sObjectProperty = sObject({
 	properties: {
@@ -169,18 +169,18 @@ const sObjectType = sObject({
 		deserialize: val =>
 			deserializationValue(new ObjectTypeDef(val.properties)),
 	})
-	.defineAs(typeDefinitionNs("StringType"));
+	.defineAs(typeDefinitionNs("ObjectType"));
 
 const sMapType = sObject({
 	properties: {
 		kind: sLiteral("map"),
-		value: typeRef,
+		valueType: typeRef,
 	},
 })
 	.refine<MapTypeDef>({
 		canSerialize: (item): item is MapTypeDef => item instanceof MapTypeDef,
-		serialize: val => ({ kind: val.kind, value: val.valueType }),
-		deserialize: val => deserializationValue(new MapTypeDef(val.value)),
+		serialize: val => ({ kind: val.kind, valueType: val.valueType }),
+		deserialize: val => deserializationValue(new MapTypeDef(val.valueType)),
 	})
 	.defineAs(typeDefinitionNs("MapType"));
 

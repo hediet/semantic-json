@@ -20,7 +20,12 @@ import {
 export class TypeSystem {
 	private readonly knownTypes = new Map<string, TypeDefinition>();
 
-	public getType(name: NamespacedName): TypeDefinition {
+	public getType(name: NamespacedName): TypeDefinition | undefined {
+		const k = this.knownTypes.get(name.toString());
+		return k;
+	}
+
+	public getOrCreateType(name: NamespacedName): TypeDefinition {
 		let k = this.knownTypes.get(name.toString());
 		if (!k) {
 			k = new TypeDefinition(name, undefined);
@@ -29,12 +34,12 @@ export class TypeSystem {
 		return k;
 	}
 
-	public isTypeDefined(name: NamespacedName): boolean {
-		return this.getType(name).isDefined;
+	public isTypeKnown(name: NamespacedName): boolean {
+		return !!this.knownTypes.get(name.toString());
 	}
 
 	public defineType(name: NamespacedName, definition: Type) {
-		this.getType(name).updateDefinition(definition);
+		this.getOrCreateType(name).updateDefinition(definition);
 	}
 
 	public definedNamespaces(): Namespace[] {
@@ -90,8 +95,12 @@ export type ExcludeType<T extends Type["kind"]> = Exclude<Type, T>;
 export abstract class BaseType {
 	public abstract toTypeDef(): TypeDef;
 
-	public resolveUnion(): ExcludeType<"definition" | "union">[] {
+	public resolveUnion(): ExcludeType<"union">[] {
 		return [this as any];
+	}
+
+	public resolveDefinition(): ExcludeType<"definition"> {
+		return this as any;
 	}
 }
 
@@ -115,8 +124,16 @@ export class TypeDefinition extends BaseType {
 		this._definition = newDefinition;
 	}
 
-	public resolveUnion(): ExcludeType<"definition" | "union">[] {
-		return this.definition.resolveUnion();
+	public resolveUnion(): ExcludeType<"union">[] {
+		const u = this.definition.resolveUnion();
+		if (u.length > 1) {
+			return u;
+		}
+		return [this];
+	}
+
+	public resolveDefinition(): ExcludeType<"definition"> {
+		return this.definition.resolveDefinition();
 	}
 
 	constructor(
@@ -154,8 +171,8 @@ export class UnionType extends BaseType {
 		return new UnionTypeDef(this.of.map(t => t.toTypeDef()));
 	}
 
-	public resolveUnion(): ExcludeType<"definition" | "union">[] {
-		return new Array<ExcludeType<"definition" | "union">>().concat(
+	public resolveUnion(): ExcludeType<"union">[] {
+		return new Array<ExcludeType<"union">>().concat(
 			...this.of.map(t => t.resolveUnion())
 		);
 	}

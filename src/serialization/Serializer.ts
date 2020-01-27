@@ -294,13 +294,11 @@ export class NamedSerializer<
 	}
 
 	public getType(typeSystem: TypeSystem): TypeDefinition {
-		if (
-			this.isDefinition &&
-			!typeSystem.isTypeDefined(this.namespacedName)
-		) {
+		if (this.isDefinition && !typeSystem.isTypeKnown(this.namespacedName)) {
+			typeSystem.getOrCreateType(this.namespacedName);
 			const definingType = this.underlyingSerializer.getType(typeSystem);
 			typeSystem.defineType(this.namespacedName, definingType);
 		}
-		return typeSystem.getType(this.namespacedName);
+		return typeSystem.getOrCreateType(this.namespacedName);
 	}
 }

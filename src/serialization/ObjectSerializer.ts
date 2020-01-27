@@ -114,7 +114,7 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 						})
 					);
 				} else if (field.defaultValue) {
-					debugger;
+					//debugger;
 					result[fieldName] = field.defaultValue.value;
 				}
 			} else {

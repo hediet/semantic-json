@@ -68,7 +68,7 @@ export class TypeRefDef extends BaseTypeDef {
 	}
 
 	public toType(typeSystem: TypeSystem): Type {
-		return typeSystem.getType(this.namespacedName);
+		return typeSystem.getOrCreateType(this.namespacedName);
 	}
 }
 
