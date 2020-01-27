@@ -328,16 +328,34 @@ export class UnionSerializer<
 		value: JSONValue,
 		context: DeserializeContext
 	): DeserializationResult<TValue> {
-		const results = new Array<ErrorDeserializationResult>();
+		const errors = new Array<{
+			index: number;
+			errors: DeserializationError[];
+		}>();
+		let idx = 0;
 		for (const s of this.serializers) {
 			const result = s.deserializeWithContext(value, context);
 			if (result.isOk) {
 				return result;
 			} else {
-				results.push(result);
+				errors.push({ index: idx, errors: result.errors });
 			}
+			idx++;
 		}
-		throw new Error("No serializer could deserialize the given value");
+		return new ErrorDeserializationResult([
+			new DeserializationError({
+				message:
+					"No serializer could deserialize the given value:\n" +
+					errors
+						.map(
+							e =>
+								`${e.index}: ${e.errors
+									.map(e => e.message)
+									.join("\n")}`
+						)
+						.join("\n"),
+			}),
+		]);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {
