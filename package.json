@@ -1,6 +1,6 @@
 {
 	"name": "@hediet/semantic-json",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "Highly experimental. Do not use yet.",
 	"scripts": {
 		"dev": "tsc --watch",
@@ -8,6 +8,10 @@
 	},
 	"main": "./dist/src/index.js",
 	"types": "./dist/src/index.d.ts",
+	"files": [
+		"./dist",
+		"./src"
+	],
 	"author": "Henning Dieterichs",
 	"license": "MIT",
 	"dependencies": {},
