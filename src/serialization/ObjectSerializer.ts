@@ -163,8 +163,13 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 		for (const [fieldName, field] of Object.entries(this.properties)) {
 			if (fieldName in value) {
 				const v = (value as any)[fieldName];
-				const val = field.serializer.serializeWithContext(v, context);
-				result[fieldName] = val;
+				if (!field.isOptional || v !== undefined) {
+					const val = field.serializer.serializeWithContext(
+						v,
+						context
+					);
+					result[fieldName] = val;
+				}
 			} else {
 			}
 		}
