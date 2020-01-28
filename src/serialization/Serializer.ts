@@ -2,6 +2,7 @@ import { JSONValue } from "../JSONValue";
 import { NamespacedName, Namespace, namespace } from "../NamespacedNamed";
 import { Type, TypeSystem, TypeDefinition } from "../schema/types";
 import { DeserializationResult } from "../result";
+import { fromEntries } from "../utils";
 
 export class DeserializeContext {
 	constructor(public readonly parent: DeserializeContext | undefined) {}
@@ -230,7 +231,7 @@ export class NamedSerializer<
 			if (typeof r !== "object" || Array.isArray(r) || !r) {
 				throw new Error("Invalid context");
 			}
-			r["$ns"] = Object.fromEntries(
+			r["$ns"] = fromEntries(
 				[...context.namespaces.entries()].map(([key, value]) => [
 					value,
 					key,

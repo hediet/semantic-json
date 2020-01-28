@@ -12,6 +12,7 @@ import {
 	deserializationError,
 	deserializationValue,
 } from "../result";
+import { fromEntries } from "../utils";
 
 export type FieldKind = "ordinary" | "optional" | "optionalWithDefault";
 
@@ -179,7 +180,7 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 
 	public getType(typeSystem: TypeSystem): Type {
 		return new ObjectType(
-			Object.fromEntries(
+			fromEntries(
 				Object.entries(this.properties).map(([key, val]) => [
 					key,
 					new ObjectProperty(

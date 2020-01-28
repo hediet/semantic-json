@@ -16,6 +16,7 @@ import {
 	LiteralType,
 	AnyType,
 } from "./types";
+import { fromEntries } from "../utils";
 
 export class TypePackageDef {
 	constructor(
@@ -187,18 +188,18 @@ export class ObjectTypeDef extends BaseTypeDef {
 
 	public toType(typeSystem: TypeSystem): Type {
 		return new ObjectType(
-			Object.fromEntries(
-				Object.entries(this.properties).map(
-					([propertyName, propertyInfo]) => [
+			fromEntries(
+				Object.entries(
+					this.properties
+				).map(([propertyName, propertyInfo]) => [
+					propertyName,
+					new ObjectProperty(
 						propertyName,
-						new ObjectProperty(
-							propertyName,
-							propertyInfo.type.toType(typeSystem),
-							propertyInfo.optional,
-							propertyInfo.defaultValue
-						),
-					]
-				)
+						propertyInfo.type.toType(typeSystem),
+						propertyInfo.optional,
+						propertyInfo.defaultValue
+					),
+				])
 			)
 		);
 	}

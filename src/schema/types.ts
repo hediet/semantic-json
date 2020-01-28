@@ -16,6 +16,7 @@ import {
 	LiteralTypeDef,
 	AnyTypeDef,
 } from "./typeDefs";
+import { fromEntries } from "../utils";
 
 export class TypeSystem {
 	private readonly knownTypes = new Map<string, TypeDefinition>();
@@ -242,7 +243,7 @@ export class ObjectType extends BaseType {
 
 	public toTypeDef(): TypeDef {
 		return new ObjectTypeDef(
-			Object.fromEntries(
+			fromEntries(
 				Object.entries(this.properties).map(([name, prop]) => [
 					name,
 					prop.toObjectPropertyDef(),
