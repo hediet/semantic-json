@@ -21,6 +21,10 @@ export class ErrorDeserializationResult extends BaseDeserializationResult<
 		super();
 	}
 
+	public formatError(): string {
+		return this.errors.map(e => e.message).join("\n");
+	}
+
 	public unwrap(): never {
 		throw new Error("Cannot unwrap error. This indicates a bug.");
 	}

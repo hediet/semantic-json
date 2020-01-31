@@ -15,6 +15,7 @@ import {
 	TypeRefDef,
 	LiteralTypeDef,
 	AnyTypeDef,
+	NullTypeDef,
 } from "./typeDefs";
 import { fromEntries } from "../utils";
 
@@ -43,7 +44,7 @@ export class TypeSystem {
 		this.getOrCreateType(name).updateDefinition(definition);
 	}
 
-	public definedNamespaces(): Namespace[] {
+	public getDefinedNamespaces(): Namespace[] {
 		const namespaces = new Set<string>();
 		for (const t of this.knownTypes.values()) {
 			namespaces.add(t.namespacedName.namespace);
@@ -64,9 +65,9 @@ export class TypeSystem {
 		return result;
 	}
 
-	public definedPackages(): TypePackageDef[] {
+	public getDefinedPackages(): TypePackageDef[] {
 		const result = new Array<TypePackageDef>();
-		for (const ns of this.definedNamespaces()) {
+		for (const ns of this.getDefinedNamespaces()) {
 			result.push(this.toPackage(ns));
 		}
 		return result;
@@ -82,6 +83,7 @@ export type Type =
 	| NumberType
 	| AnyType
 	| LiteralType
+	| NullType
 	| ObjectType
 	| ArrayType
 	| CustomType
@@ -231,6 +233,14 @@ export class LiteralType extends BaseType {
 
 	public toTypeDef(): TypeDef {
 		return new LiteralTypeDef(this.value);
+	}
+}
+
+export class NullType extends BaseType {
+	public readonly kind = "null";
+
+	public toTypeDef(): TypeDef {
+		return new NullTypeDef();
 	}
 }
 

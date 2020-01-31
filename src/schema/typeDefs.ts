@@ -15,6 +15,7 @@ import {
 	MapType,
 	LiteralType,
 	AnyType,
+	NullType,
 } from "./types";
 import { fromEntries } from "../utils";
 
@@ -49,6 +50,7 @@ export type TypeDef =
 	| NumberTypeDef
 	| AnyTypeDef
 	| LiteralTypeDef
+	| NullTypeDef
 	| ObjectTypeDef
 	| MapTypeDef
 	| ArrayTypeDef
@@ -173,6 +175,16 @@ export class LiteralTypeDef extends BaseTypeDef {
 	}
 }
 
+export class NullTypeDef extends BaseTypeDef {
+	public readonly kind = "null";
+
+	public collectUsedNamespaces(set: Set<string>): void {}
+
+	public toType(typeSystem: TypeSystem): Type {
+		return new NullType();
+	}
+}
+
 export class ObjectTypeDef extends BaseTypeDef {
 	public readonly kind = "object";
 
@@ -227,6 +239,40 @@ export class ArrayTypeDef extends BaseTypeDef {
 	public toType(typeSystem: TypeSystem): Type {
 		return new ArrayType(this.itemType.toType(typeSystem));
 	}
+}
+
+export class TupleTypeDef extends BaseTypeDef {
+	public readonly kind = "tuple";
+
+	constructor(
+		public readonly entries: TupleEntryDef[],
+		public readonly optionalEntries: OptionalTupleEntryDef[],
+		public readonly additionalEntries?: TupleEntryDef
+	) {
+		super();
+	}
+
+	public collectUsedNamespaces(set: Set<string>): void {
+		for (const e of this.entries) {
+			e.type.collectUsedNamespaces(set);
+		}
+		for (const e of this.optionalEntries) {
+			e.type.collectUsedNamespaces(set);
+		}
+	}
+
+	public toType(typeSystem: TypeSystem): Type {}
+}
+
+export class TupleEntryDef {
+	constructor(public readonly type: TypeDef) {}
+}
+
+export class OptionalTupleEntryDef {
+	constructor(
+		public readonly type: TypeDef,
+		public readonly defaultValue: JSONValue | undefined
+	) {}
 }
 
 export class MapTypeDef extends BaseTypeDef {

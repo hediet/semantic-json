@@ -87,7 +87,7 @@ describe("Serialization Schema", () => {
 		const ts = new TypeSystem();
 		const t = sContactBook.getType(ts);
 
-		for (const ns of ts.definedNamespaces()) {
+		for (const ns of ts.getDefinedNamespaces()) {
 			const pkg = ts.toPackage(ns);
 			const j = sTypePackage.serialize(pkg);
 

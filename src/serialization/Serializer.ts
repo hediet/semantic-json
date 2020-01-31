@@ -37,15 +37,17 @@ export class SerializeContext {
 	}
 }
 
-class DefaultSerializeContext extends SerializeContext {
+class DefaultSerializeContextImpl extends SerializeContext {
 	public getPrefixForNamespace(ns: Namespace): string {
 		throw new Error("Not in object context!");
 	}
 }
 
-export interface Serializer<TValue, TSource extends JSONValue> {
+export const DefaultSerializeContext = new DefaultSerializeContextImpl();
+
+export interface Serializer<TValue, TSource extends JSONValue = JSONValue> {
 	canSerialize(item: unknown): item is TValue;
-	serializeWithContext(item: TValue, context: SerializeContext): JSONValue;
+	serializeWithContext(item: TValue, context: SerializeContext): TSource;
 
 	deserializeWithContext(
 		value: JSONValue,
@@ -68,10 +70,10 @@ export abstract class BaseSerializer<TValue, TSource extends JSONValue>
 	public abstract serializeWithContext(
 		value: TValue,
 		context: SerializeContext
-	): JSONValue;
+	): TSource;
 
 	public serialize(value: TValue): JSONValue {
-		return this.serializeWithContext(value, new DefaultSerializeContext());
+		return this.serializeWithContext(value, DefaultSerializeContext);
 	}
 
 	public abstract deserializeWithContext(
@@ -151,7 +153,7 @@ class RefinedSerializer<
 	public serializeWithContext(
 		value: TValue,
 		context: SerializeContext
-	): JSONValue {
+	): TSource {
 		const intermediate = this.options.serialize(value);
 		return this.underlyingSerializer.serializeWithContext(
 			intermediate,
@@ -191,7 +193,7 @@ export abstract class DelegatingSerializer<
 	public serializeWithContext(
 		value: TValue,
 		context: SerializeContext
-	): JSONValue {
+	): TSource {
 		return this.underlyingSerializer.serializeWithContext(value, context);
 	}
 	public deserializeWithContext(
@@ -217,9 +219,9 @@ export class NamedSerializer<
 	public serializeWithContext(
 		value: TValue,
 		context: SerializeContext
-	): JSONValue {
+	): TSource {
 		let newContext = false;
-		if (context instanceof DefaultSerializeContext) {
+		if (context instanceof DefaultSerializeContextImpl) {
 			context = new SerializeContext();
 			newContext = true;
 		}

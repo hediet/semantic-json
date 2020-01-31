@@ -18,6 +18,7 @@ import {
 	MapType,
 	LiteralType,
 	AnyType,
+	NullType,
 } from "../schema/types";
 import { NamespacedName, Namespace } from "..";
 import { namespace } from "../NamespacedNamed";
@@ -37,8 +38,8 @@ export class DowncastSerializer<T extends JSONValue> extends BaseSerializer<
 		return true;
 	}
 
-	public serializeWithContext(value: T): JSONValue {
-		return (value as any) as JSONValue;
+	public serializeWithContext(value: T): T {
+		return (value as any) as T;
 	}
 
 	public deserializeWithContext(value: JSONValue): DeserializationResult<T> {
@@ -50,7 +51,7 @@ export class DowncastSerializer<T extends JSONValue> extends BaseSerializer<
 	}
 }
 
-export class LiteralSerializer<
+class LiteralSerializer<
 	T extends string | number | boolean
 > extends BaseSerializer<T, T> {
 	constructor(public readonly value: T) {
@@ -61,8 +62,8 @@ export class LiteralSerializer<
 		return value === this.value;
 	}
 
-	public serializeWithContext(value: T): JSONValue {
-		return (value as any) as JSONValue;
+	public serializeWithContext(value: T): T {
+		return (value as any) as T;
 	}
 
 	public deserializeWithContext(value: JSONValue): DeserializationResult<T> {
@@ -86,15 +87,16 @@ export function sLiteral<T extends string | number | boolean>(
 	return new LiteralSerializer(literal);
 }
 
-export type TypeNames = {
+type TypeNames = {
 	boolean: boolean;
 	number: number;
 	string: string;
 };
 
-export class TypeSerializer<
-	TTypeName extends keyof TypeNames
-> extends BaseSerializer<TypeNames[TTypeName], TypeNames[TTypeName]> {
+class TypeSerializer<TTypeName extends keyof TypeNames> extends BaseSerializer<
+	TypeNames[TTypeName],
+	TypeNames[TTypeName]
+> {
 	constructor(private readonly typeName: TTypeName) {
 		super();
 	}
@@ -117,7 +119,9 @@ export class TypeSerializer<
 		return deserializationValue(value);
 	}
 
-	public serializeWithContext(value: TypeNames[TTypeName]): JSONValue {
+	public serializeWithContext(
+		value: TypeNames[TTypeName]
+	): TypeNames[TTypeName] {
 		return value;
 	}
 
@@ -138,10 +142,7 @@ export const sString = new TypeSerializer("string");
 export const sBoolean = new TypeSerializer("boolean");
 export const sNumber = new TypeSerializer("number");
 
-export class MapSerializer<
-	TValue,
-	TSource extends JSONValue
-> extends BaseSerializer<
+class MapSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 	{ [key: string]: TValue },
 	{ [key: string]: TSource }
 > {
@@ -161,8 +162,8 @@ export class MapSerializer<
 	public serializeWithContext(
 		value: { [key: string]: TValue },
 		context: SerializeContext
-	): JSONValue {
-		const result: Record<string, JSONValue> = {};
+	): { [key: string]: TSource } {
+		const result: Record<string, TSource> = {};
 		for (const [key, val] of Object.entries(value)) {
 			result[key] = this.itemSerializer.serializeWithContext(
 				val,
@@ -208,13 +209,7 @@ export function sMap<TValue, TSource extends JSONValue>(
 	return new MapSerializer(itemSerializer);
 }
 
-export function sRef<TValue, TSource extends JSONValue>(
-	serializerRef: () => NamedSerializer<TValue, TSource>
-): BaseSerializer<TValue, TSource> {
-	return new RefSerializer(serializerRef);
-}
-
-export class RefSerializer<
+class RefSerializer<
 	TValue,
 	TSource extends JSONValue
 > extends DelegatingSerializer<TValue, TSource> {
@@ -238,16 +233,16 @@ export class RefSerializer<
 	}
 }
 
-export function sArray<TValue, TSource extends JSONValue>(
-	itemSerializer: Serializer<TValue, TSource>
-): ArraySerializer<TValue, TSource> {
-	return new ArraySerializer(itemSerializer);
+export function sRef<TValue, TSource extends JSONValue>(
+	serializerRef: () => NamedSerializer<TValue, TSource>
+): BaseSerializer<TValue, TSource> {
+	return new RefSerializer(serializerRef);
 }
 
-export class ArraySerializer<
-	TValue,
-	TSource extends JSONValue
-> extends BaseSerializer<TValue[], TSource[]> {
+class ArraySerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
+	TValue[],
+	TSource[]
+> {
 	constructor(public readonly itemSerializer: Serializer<TValue, TSource>) {
 		super();
 	}
@@ -259,7 +254,7 @@ export class ArraySerializer<
 	public serializeWithContext(
 		value: TValue[],
 		context: SerializeContext
-	): JSONValue {
+	): TSource[] {
 		return value.map(v =>
 			this.itemSerializer.serializeWithContext(v, context)
 		);
@@ -300,10 +295,16 @@ export class ArraySerializer<
 	}
 }
 
-export class UnionSerializer<
+export function sArray<TValue, TSource extends JSONValue>(
+	itemSerializer: Serializer<TValue, TSource>
+): ArraySerializer<TValue, TSource> {
+	return new ArraySerializer(itemSerializer);
+}
+
+class UnionSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 	TValue,
-	TSource extends JSONValue
-> extends BaseSerializer<TValue, TSource> {
+	TSource
+> {
 	constructor(public readonly serializers: Serializer<TValue, TSource>[]) {
 		super();
 	}
@@ -315,7 +316,7 @@ export class UnionSerializer<
 	public serializeWithContext(
 		value: TValue,
 		context: SerializeContext
-	): JSONValue {
+	): TSource {
 		for (const s of this.serializers) {
 			if (s.canSerialize(value)) {
 				return s.serializeWithContext(value, context);
@@ -372,10 +373,7 @@ export function sUnion<TSerializer extends Serializer<any, any>[]>(
 	return new UnionSerializer(serializers);
 }
 
-export class NamespacedNameSerializer extends BaseSerializer<
-	NamespacedName,
-	string
-> {
+class NamespacedNameSerializer extends BaseSerializer<NamespacedName, string> {
 	public canSerialize(value: unknown): value is NamespacedName {
 		return value instanceof NamespacedName;
 	}
@@ -383,7 +381,7 @@ export class NamespacedNameSerializer extends BaseSerializer<
 	public serializeWithContext(
 		value: NamespacedName,
 		context: SerializeContext
-	): JSONValue {
+	): string {
 		const prefix = context.getPrefixForNamespace(
 			namespace(value.namespace)
 		);
@@ -416,14 +414,14 @@ export class NamespacedNameSerializer extends BaseSerializer<
 
 export const sNamespacedName = new NamespacedNameSerializer();
 
-export class NamespaceSerializer extends BaseSerializer<Namespace, string> {
+class NamespaceSerializer extends BaseSerializer<Namespace, string> {
 	public canSerialize(value: unknown): value is Namespace {
 		return !!(typeof value === "object" && value && "namespace" in value);
 	}
 	public serializeWithContext(
 		value: Namespace,
 		context: SerializeContext
-	): JSONValue {
+	): string {
 		return context.getPrefixForNamespace(value);
 	}
 
@@ -444,3 +442,34 @@ export class NamespaceSerializer extends BaseSerializer<Namespace, string> {
 }
 
 export const sNamespace = new NamespaceSerializer();
+
+export const sAny = new DowncastSerializer<any>();
+
+class VoidSerializer extends BaseSerializer<void, null> {
+	public canSerialize(value: unknown): value is void {
+		return value === undefined;
+	}
+
+	public serializeWithContext(value: void): null {
+		return null;
+	}
+
+	public deserializeWithContext(
+		value: JSONValue
+	): DeserializationResult<void> {
+		if (value !== null) {
+			return deserializationError(
+				new DeserializationError({
+					message: "Value is expected to be null, but was not.",
+				})
+			);
+		}
+		return deserializationValue(undefined);
+	}
+
+	public getType(typeSystem: TypeSystem): Type {
+		return new NullType();
+	}
+}
+
+export const sVoid = new VoidSerializer();

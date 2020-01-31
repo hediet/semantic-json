@@ -27,19 +27,19 @@ import {
 	TypePackageDef,
 	AnyTypeDef,
 	LiteralTypeDef,
+	NullTypeDef,
+	TypeDef,
 } from "./typeDefs";
 import { deserializationValue } from "../result";
 import { namespace } from "../NamespacedNamed";
 
 const typeDefinitionNs = namespace("json-types.org/type-definition");
 
-const typeRef = sRef(() => sType);
+const typeRef = sRef(() => sTypeDef);
 
 const sUnionType = sObject({
-	properties: {
-		kind: sLiteral("union"),
-		of: sArray(typeRef),
-	},
+	kind: sLiteral("union"),
+	of: sArray(typeRef),
 })
 	.refine<UnionTypeDef>({
 		canSerialize: (val): val is UnionTypeDef => val instanceof UnionTypeDef,
@@ -58,9 +58,7 @@ const sIntersectionType = sArray(typeRef)
 	.defineAs(typeDefinitionNs("IntersectionType"));
 
 const sStringType = sObject({
-	properties: {
-		kind: sLiteral("string"),
-	},
+	kind: sLiteral("string"),
 })
 	.refine<StringTypeDef>({
 		canSerialize: (val): val is StringTypeDef =>
@@ -71,9 +69,7 @@ const sStringType = sObject({
 	.defineAs(typeDefinitionNs("StringType"));
 
 const sBooleanType = sObject({
-	properties: {
-		kind: sLiteral("boolean"),
-	},
+	kind: sLiteral("boolean"),
 })
 	.refine<BooleanTypeDef>({
 		canSerialize: (val): val is BooleanTypeDef =>
@@ -84,9 +80,7 @@ const sBooleanType = sObject({
 	.defineAs(typeDefinitionNs("BooleanType"));
 
 const sNumberType = sObject({
-	properties: {
-		kind: sLiteral("number"),
-	},
+	kind: sLiteral("number"),
 })
 	.refine<NumberTypeDef>({
 		canSerialize: (val): val is NumberTypeDef =>
@@ -97,9 +91,7 @@ const sNumberType = sObject({
 	.defineAs(typeDefinitionNs("NumberType"));
 
 const sAnyType = sObject({
-	properties: {
-		kind: sLiteral("any"),
-	},
+	kind: sLiteral("any"),
 })
 	.refine<AnyTypeDef>({
 		canSerialize: (val): val is AnyTypeDef => val instanceof AnyTypeDef,
@@ -109,10 +101,8 @@ const sAnyType = sObject({
 	.defineAs(typeDefinitionNs("AnyType"));
 
 const sLiteralType = sObject({
-	properties: {
-		kind: sLiteral("literal"),
-		value: sUnion(sString, sNumber, sBoolean),
-	},
+	kind: sLiteral("literal"),
+	value: sUnion(sString, sNumber, sBoolean),
 })
 	.refine<LiteralTypeDef>({
 		canSerialize: (val): val is LiteralTypeDef =>
@@ -122,14 +112,22 @@ const sLiteralType = sObject({
 	})
 	.defineAs(typeDefinitionNs("LiteralType"));
 
+const sNullType = sObject({
+	kind: sLiteral("null"),
+})
+	.refine<NullTypeDef>({
+		canSerialize: (val): val is NullTypeDef => val instanceof NullTypeDef,
+		serialize: val => ({ kind: val.kind }),
+		deserialize: val => deserializationValue(new NullTypeDef()),
+	})
+	.defineAs(typeDefinitionNs("LiteralType"));
+
 const sObjectProperty = sObject({
-	properties: {
-		type: typeRef,
-		optional: field({
-			serializer: sBoolean,
-			optional: { withDefault: false },
-		}),
-	},
+	type: typeRef,
+	optional: field({
+		serializer: sBoolean,
+		optional: { withDefault: false },
+	}),
 })
 	.refine<ObjectPropertyDef>({
 		canSerialize: (item): item is ObjectPropertyDef =>
@@ -143,10 +141,8 @@ const sObjectProperty = sObject({
 	.defineAs(typeDefinitionNs("ObjectProperty"));
 
 const sArrayType = sObject({
-	properties: {
-		kind: sLiteral("array"),
-		of: typeRef,
-	},
+	kind: sLiteral("array"),
+	of: typeRef,
 })
 	.refine<ArrayTypeDef>({
 		canSerialize: (item): item is ArrayTypeDef =>
@@ -157,10 +153,8 @@ const sArrayType = sObject({
 	.defineAs(typeDefinitionNs("ArrayType"));
 
 const sObjectType = sObject({
-	properties: {
-		kind: sLiteral("object"),
-		properties: sMap(sObjectProperty),
-	},
+	kind: sLiteral("object"),
+	properties: sMap(sObjectProperty),
 })
 	.refine<ObjectTypeDef>({
 		canSerialize: (val): val is ObjectTypeDef =>
@@ -172,10 +166,8 @@ const sObjectType = sObject({
 	.defineAs(typeDefinitionNs("ObjectType"));
 
 const sMapType = sObject({
-	properties: {
-		kind: sLiteral("map"),
-		valueType: typeRef,
-	},
+	kind: sLiteral("map"),
+	valueType: typeRef,
 })
 	.refine<MapTypeDef>({
 		canSerialize: (item): item is MapTypeDef => item instanceof MapTypeDef,
@@ -192,20 +184,7 @@ const sTypeRef = sNamespacedName
 	})
 	.defineAs(typeDefinitionNs("TypeReference"));
 
-const sType: NamedSerializer<
-	| UnionTypeDef
-	| IntersectionTypeDef
-	| StringTypeDef
-	| BooleanTypeDef
-	| NumberTypeDef
-	| AnyTypeDef
-	| LiteralTypeDef
-	| ObjectTypeDef
-	| MapTypeDef
-	| ArrayTypeDef
-	| TypeRefDef,
-	any
-> = sUnion(
+export const sTypeDef: NamedSerializer<TypeDef, any> = sUnion(
 	sUnionType,
 	sIntersectionType,
 	sStringType,
@@ -213,6 +192,7 @@ const sType: NamedSerializer<
 	sNumberType,
 	sAnyType,
 	sLiteralType,
+	sNullType,
 	sObjectType,
 	sMapType,
 	sArrayType,
@@ -220,21 +200,22 @@ const sType: NamedSerializer<
 ).defineAs(typeDefinitionNs("Type"));
 
 export const sTypePackage = sObject({
-	properties: {
-		packageId: sNamespace,
-		typeDefinitions: sMap(sType),
-	},
+	packageId: sString,
+	typeDefinitions: sMap(sTypeDef),
 })
 	.refine<TypePackageDef>({
 		canSerialize: (val): val is TypePackageDef =>
 			val instanceof TypePackageDef,
 		serialize: val => ({
-			packageId: val.packageNs,
+			packageId: val.packageNs.namespace,
 			typeDefinitions: val.definitions,
 		}),
 		deserialize: val =>
 			deserializationValue(
-				new TypePackageDef(val.packageId, val.typeDefinitions)
+				new TypePackageDef(
+					namespace(val.packageId),
+					val.typeDefinitions
+				)
 			),
 	})
 	.defineAs(typeDefinitionNs("TypeDefinitions"));

@@ -14,48 +14,6 @@ import {
 } from "../result";
 import { fromEntries } from "../utils";
 
-export type FieldKind = "ordinary" | "optional" | "optionalWithDefault";
-
-export interface FieldType<
-	TValue,
-	TSource extends JSONValue,
-	TKind extends FieldKind
-> {
-	serializer: Serializer<TValue, TSource>;
-	kind: TKind;
-}
-
-export class FieldInfo<
-	TValue = any,
-	TSource extends JSONValue = any,
-	TKind extends FieldKind = FieldKind
-> {
-	get T(): FieldType<TValue, TSource, TKind> {
-		throw new Error("Not meant to be accessed at runtime!");
-	}
-
-	constructor(
-		public readonly name: string,
-		public readonly serializer: Serializer<TValue, TSource>,
-		public readonly description: string | undefined,
-		public readonly isOptional: boolean,
-		public readonly defaultValue: { value: TValue } | undefined
-	) {}
-
-	public withName(newName: string): FieldInfo<TValue, TSource, TKind> {
-		return new FieldInfo(
-			newName,
-			this.serializer,
-			this.description,
-			this.isOptional,
-			this.defaultValue
-		);
-	}
-}
-
-export type Fields = Record<string, FieldType<any, any, FieldKind>>;
-export type AsFields<T extends Fields> = T;
-
 export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 	FieldsToTValue<TFields>,
 	FieldsToTSource<TFields>
@@ -159,7 +117,7 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 	public serializeWithContext(
 		value: FieldsToTValue<TFields>,
 		context: SerializeContext
-	): JSONValue {
+	): FieldsToTSource<TFields> {
 		const result: Record<string, JSONValue> = {};
 		for (const [fieldName, field] of Object.entries(this.properties)) {
 			if (fieldName in value) {
@@ -175,7 +133,7 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 			}
 		}
 
-		return result;
+		return result as FieldsToTSource<TFields>;
 	}
 
 	public getType(typeSystem: TypeSystem): Type {
@@ -194,6 +152,48 @@ export class ObjectSerializer<TFields extends Fields> extends BaseSerializer<
 		);
 	}
 }
+
+export type FieldKind = "ordinary" | "optional" | "optionalWithDefault";
+
+export interface FieldType<
+	TValue,
+	TSource extends JSONValue,
+	TKind extends FieldKind
+> {
+	serializer: Serializer<TValue, TSource>;
+	kind: TKind;
+}
+
+export class FieldInfo<
+	TValue = any,
+	TSource extends JSONValue = any,
+	TKind extends FieldKind = FieldKind
+> {
+	get T(): FieldType<TValue, TSource, TKind> {
+		throw new Error("Not meant to be accessed at runtime!");
+	}
+
+	constructor(
+		public readonly name: string,
+		public readonly serializer: Serializer<TValue, TSource>,
+		public readonly description: string | undefined,
+		public readonly isOptional: boolean,
+		public readonly defaultValue: { value: TValue } | undefined
+	) {}
+
+	public withName(newName: string): FieldInfo<TValue, TSource, TKind> {
+		return new FieldInfo(
+			newName,
+			this.serializer,
+			this.description,
+			this.isOptional,
+			this.defaultValue
+		);
+	}
+}
+
+export type Fields = Record<string, FieldType<any, any, FieldKind>>;
+export type AsFields<T extends Fields> = T;
 
 export type FieldsWith<TFields extends Fields, TKind extends FieldKind> = {
 	[TKey in keyof TFields]: TFields[TKey] extends FieldType<any, any, TKind>
@@ -235,10 +235,10 @@ export type FieldsToTSource<TFields extends Fields> = Simplify<
 
 export type FieldsOptions = Record<string, FieldInfo | Serializer<any, any>>;
 
-export function sObject<T extends FieldsOptions>(data: {
-	properties: T;
-}): ObjectSerializer<ObjectTypeCtor<T>> {
-	const normalizedFields = normalizeProperties(data.properties);
+export function sObject<T extends FieldsOptions>(
+	properties: T
+): ObjectSerializer<ObjectTypeCtor<T>> {
+	const normalizedFields = normalizeProperties(properties);
 	return new ObjectSerializer<ObjectTypeCtor<T>>(normalizedFields);
 }
 
