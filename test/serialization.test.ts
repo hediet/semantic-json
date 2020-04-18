@@ -1,6 +1,6 @@
 import {
 	sObject,
-	field,
+	sObjectProp,
 	DowncastSerializer,
 	sBoolean,
 	sString,
@@ -8,14 +8,14 @@ import {
 	JSONObject,
 	sArray,
 	namespace,
+	sLiteral,
 } from "../src";
 import { sTypePackage } from "../src/schema/typeDefsSerializer";
-import { TypeSystem } from "../src/schema/types";
-import { deserializationValue } from "../src/result";
+import { TypeSystem } from "../src/types/types";
+import { deserializationValue } from "../src/BaseDeserializationResult";
 
 describe("Serialization Schema", () => {
 	it("works", () => {
-		debugger;
 		class ContactBook {
 			public contacts = new Array<Contact>();
 		}
@@ -32,20 +32,18 @@ describe("Serialization Schema", () => {
 		const contactBookNs = namespace("types.hediet.de/contactbook");
 
 		const sContact = sObject({
-			properties: {
-				firstName: sString,
-				lastName: sString,
-			},
+			firstName: sString,
+			lastName: sString,
 		})
 			.refine<Contact>({
 				canSerialize: (v): v is Contact => v instanceof Contact,
-				deserialize: v => {
+				deserialize: (v) => {
 					const c = new Contact();
 					c.firstName = v.firstName;
 					c.lastName = v.lastName;
 					return deserializationValue(c);
 				},
-				serialize: v => ({
+				serialize: (v) => ({
 					firstName: v.firstName,
 					lastName: v.lastName,
 				}),
@@ -53,18 +51,16 @@ describe("Serialization Schema", () => {
 			.defineAs(contactBookNs("Contact"));
 
 		const sContactBook = sObject({
-			properties: {
-				contacts: field({ serializer: sArray(sContact) }),
-			},
+			contacts: sObjectProp({ serializer: sArray(sContact) }),
 		})
 			.refine<ContactBook>({
 				canSerialize: (v): v is ContactBook => v instanceof ContactBook,
-				deserialize: v => {
+				deserialize: (v) => {
 					const c = new ContactBook();
 					c.contacts = v.contacts;
 					return deserializationValue(c);
 				},
-				serialize: v => ({ contacts: v.contacts }),
+				serialize: (v) => ({ contacts: v.contacts }),
 			})
 			.defineAs(contactBookNs("ContactBook"));
 
@@ -186,4 +182,31 @@ describe("Serialization", () => {
 			obj;
 		}*/
 	});
+});
+
+describe("bla", () => {
+	const text = sObject({
+		kind: sObject({
+			text: sLiteral(true),
+		}),
+		text: sString,
+		mimeType: sObjectProp({ serializer: sString, optional: true }),
+		fileName: sObjectProp({ serializer: sString, optional: true }),
+	});
+
+	sIntersect([
+		text,
+		sObject({
+			kind: sObject({
+				svg: sLiteral(true),
+			}),
+		}),
+	]);
+
+	//const d: typeof text["TValue"] = null!;
+
+	//sIntersect
+	//const svg =
+
+	// sUnionIntersecting
 });

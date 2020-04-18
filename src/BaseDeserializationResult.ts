@@ -22,11 +22,13 @@ export class ErrorDeserializationResult extends BaseDeserializationResult<
 	}
 
 	public formatError(): string {
-		return this.errors.map(e => e.message).join("\n");
+		return this.errors.map((e) => e.message).join("\n");
 	}
 
 	public unwrap(): never {
-		throw new Error("Cannot unwrap error. This indicates a bug.");
+		throw new Error(
+			`Could not deserialize input. ${this.errors.map((e) => e.message)}`
+		);
 	}
 
 	public get isOk(): false {
@@ -46,7 +48,7 @@ export function deserializationError(
 	...errors: (DeserializationError | { message: string })[]
 ): ErrorDeserializationResult {
 	return new ErrorDeserializationResult(
-		errors.map(e => {
+		errors.map((e) => {
 			if (e instanceof DeserializationError) {
 				return e;
 			}

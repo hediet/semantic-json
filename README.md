@@ -1,0 +1,15 @@
+-   Date/Time Format
+    -   Various Formats
+-   GUID
+-   IPv4
+-   IPv6
+-   Color
+-   Regex
+-   File/Directory/Filter
+-   Template String
+-   Binary64 Data
+-   Image
+-   Signature
+-   Currency
+-   SI Unit
+-   Phone Number

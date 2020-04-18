@@ -16,7 +16,7 @@ import {
 	LiteralType,
 	AnyType,
 	NullType,
-} from "./types";
+} from "../types/types";
 import { fromEntries } from "../utils";
 
 export class TypePackageDef {
@@ -100,7 +100,7 @@ export class UnionTypeDef extends BaseTypeDef {
 	}
 
 	public toType(typeSystem: TypeSystem): Type {
-		return new UnionType(this.of.map(t => t.toType(typeSystem)));
+		return new UnionType(this.of.map((t) => t.toType(typeSystem)));
 	}
 }
 
@@ -117,7 +117,7 @@ export class IntersectionTypeDef extends BaseTypeDef {
 	}
 
 	public toType(typeSystem: TypeSystem): Type {
-		return new IntersectionType(this.of.map(t => t.toType(typeSystem)));
+		return new IntersectionType(this.of.map((t) => t.toType(typeSystem)));
 	}
 }
 

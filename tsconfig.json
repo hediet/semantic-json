@@ -6,7 +6,7 @@
 		"strict": true,
 		"outDir": "dist",
 		"sourceMap": true,
-		"declarationMap": true
+		"declarationMap": false
 	},
 	"include": ["src/**/*", "test/**/*"],
 	"exclude": []

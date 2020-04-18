@@ -10,7 +10,6 @@
 		"ContactBook": { "kind": "union", "of": ["#CmdPrint"] },
 		"CmdPrint": {
 			"kind": "object",
-			"allowUnknownProperties": true,
 			"properties": {
 				"files": {
 					"cmd#kind": "PositionalArg",

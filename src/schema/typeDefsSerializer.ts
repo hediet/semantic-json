@@ -3,7 +3,7 @@ import {
 	sObject,
 	sLiteral,
 	sArray,
-	field,
+	sObjectProp,
 	sBoolean,
 	sMap,
 	sNamespacedName,
@@ -30,7 +30,7 @@ import {
 	NullTypeDef,
 	TypeDef,
 } from "./typeDefs";
-import { deserializationValue } from "../result";
+import { deserializationValue } from "../BaseDeserializationResult";
 import { namespace } from "../NamespacedNamed";
 
 const typeDefinitionNs = namespace("json-types.org/type-definition");
@@ -124,7 +124,7 @@ const sNullType = sObject({
 
 const sObjectProperty = sObject({
 	type: typeRef,
-	optional: field({
+	optional: sObjectProp({
 		serializer: sBoolean,
 		optional: { withDefault: false },
 	}),

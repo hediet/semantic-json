@@ -16,7 +16,7 @@ import {
 	LiteralTypeDef,
 	AnyTypeDef,
 	NullTypeDef,
-} from "./typeDefs";
+} from "../schema/typeDefs";
 import { fromEntries } from "../utils";
 
 export class TypeSystem {
@@ -49,7 +49,7 @@ export class TypeSystem {
 		for (const t of this.knownTypes.values()) {
 			namespaces.add(t.namespacedName.namespace);
 		}
-		return [...namespaces].map(ns => namespace(ns));
+		return [...namespaces].map((ns) => namespace(ns));
 	}
 
 	public toPackage(ns: Namespace): TypePackageDef {
@@ -171,12 +171,12 @@ export class UnionType extends BaseType {
 	}
 
 	public toTypeDef(): TypeDef {
-		return new UnionTypeDef(this.of.map(t => t.toTypeDef()));
+		return new UnionTypeDef(this.of.map((t) => t.toTypeDef()));
 	}
 
 	public resolveUnion(): ExcludeType<"union">[] {
 		return new Array<ExcludeType<"union">>().concat(
-			...this.of.map(t => t.resolveUnion())
+			...this.of.map((t) => t.resolveUnion())
 		);
 	}
 }
@@ -188,7 +188,7 @@ export class IntersectionType extends BaseType {
 	}
 
 	public toTypeDef(): TypeDef {
-		return new IntersectionTypeDef(this.of.map(t => t.toTypeDef()));
+		return new IntersectionTypeDef(this.of.map((t) => t.toTypeDef()));
 	}
 }
 
