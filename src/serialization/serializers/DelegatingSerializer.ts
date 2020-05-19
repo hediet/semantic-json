@@ -1,4 +1,4 @@
-import { JSONValue, DeserializationResult } from "../..";
+import { JSONValue, Validation } from "../..";
 import { BaseSerializer } from "./BaseSerializer";
 import { Serializer } from "..";
 import { SerializeContext, DeserializeContext } from "../Context";
@@ -21,7 +21,7 @@ export abstract class DelegatingSerializer<
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<TValue> {
+	): Validation<TValue> {
 		return this.underlyingSerializer.deserializeWithContext(value, context);
 	}
 }

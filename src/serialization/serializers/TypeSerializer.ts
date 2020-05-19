@@ -1,9 +1,9 @@
 import { BaseSerializer } from "./BaseSerializer";
 import {
 	JSONValue,
-	DeserializationResult,
-	deserializationError,
-	deserializationValue,
+	Validation,
+	invalidData,
+	validData,
 	TypeSystem,
 	Type,
 	BooleanType,
@@ -31,16 +31,16 @@ class TypeSerializer<TTypeName extends keyof TypeNames> extends BaseSerializer<
 
 	public deserializeWithContext(
 		value: JSONValue
-	): DeserializationResult<TypeNames[TTypeName]> {
+	): Validation<TypeNames[TTypeName]> {
 		if (!this.canSerialize(value)) {
-			return deserializationError({
+			return invalidData({
 				message: `Expected a ${
 					this.typeName
 				}, but got a ${typeof value}.`,
 			});
 		}
 
-		return deserializationValue(value);
+		return validData(value);
 	}
 
 	public serializeWithContext(

@@ -1,18 +1,14 @@
 import { Serializer } from "../Serializer";
 import { BaseSerializer } from "./BaseSerializer";
 import { JSONValue } from "../../JSONValue";
+import { ObjectType, ObjectProperty, Type } from "../../types";
+import { TypeSystem } from "../../types/TypeSystem";
 import {
-	TypeSystem,
-	ObjectType,
-	ObjectProperty,
-	Type,
-} from "../../types/types";
-import {
-	DeserializationError,
-	DeserializationResult,
-	deserializationError,
-	deserializationValue,
-} from "../../BaseDeserializationResult";
+	ValidationError,
+	Validation,
+	invalidData,
+	validData,
+} from "../../Validation";
 import { fromEntries } from "../../utils";
 import { DeserializeContext, SerializeContext } from "../Context";
 
@@ -66,19 +62,19 @@ export class ObjectSerializer<
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<PropsToTValue<TProps>> {
+	): Validation<PropsToTValue<TProps>> {
 		if (typeof value !== "object" || value === null) {
-			return deserializationError({
+			return invalidData({
 				message: `Expected an object, but got a ${typeof value}.`,
 			});
 		}
-		const errors = new Array<DeserializationError>();
+		const errors = new Array<ValidationError>();
 		const result: any = {};
 		for (const [propName, prop] of Object.entries(this.properties)) {
 			if (!(propName in value)) {
 				if (!prop.isOptional) {
 					errors.push(
-						new DeserializationError({
+						new ValidationError({
 							message: `Required property "${propName}" is missing.`,
 						})
 					);
@@ -110,7 +106,7 @@ export class ObjectSerializer<
 			const prop = this.properties[propName];
 			if (!prop) {
 				errors.push(
-					new DeserializationError({
+					new ValidationError({
 						message: `Property "${propName}" is not expected here.`,
 						path: [propName],
 					})
@@ -119,10 +115,10 @@ export class ObjectSerializer<
 		}
 
 		if (errors.length > 0) {
-			return deserializationError(...errors);
+			return invalidData(...errors);
 		}
 
-		return deserializationValue(result);
+		return validData(result);
 	}
 
 	public serializeWithContext(

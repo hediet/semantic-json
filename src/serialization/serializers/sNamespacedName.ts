@@ -3,9 +3,9 @@ import {
 	NamespacedName,
 	namespace,
 	JSONValue,
-	DeserializationResult,
-	deserializationError,
-	deserializationValue,
+	Validation,
+	invalidData,
+	validData,
 	TypeSystem,
 	Type,
 	StringType,
@@ -30,9 +30,9 @@ class NamespacedNameSerializer extends BaseSerializer<NamespacedName, string> {
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<NamespacedName> {
+	): Validation<NamespacedName> {
 		if (typeof value !== "string") {
-			return deserializationError({ message: "must be of type string" });
+			return invalidData({ message: "must be of type string" });
 		}
 		const regExp = /(.*)#(.*)/;
 		const m = regExp.exec(value);
@@ -40,7 +40,7 @@ class NamespacedNameSerializer extends BaseSerializer<NamespacedName, string> {
 			const nsPrefix = m[1];
 			const name = m[2];
 			const ns = context.lookupNamespace(nsPrefix);
-			return deserializationValue(ns(name));
+			return validData(ns(name));
 		} else {
 			throw new Error(`Malformed type "${value}"`);
 		}

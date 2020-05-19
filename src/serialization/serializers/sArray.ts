@@ -1,9 +1,9 @@
 import {
 	JSONValue,
-	DeserializationResult,
-	deserializationError,
-	DeserializationError,
-	deserializationValue,
+	Validation,
+	invalidData,
+	ValidationError,
+	validData,
 	TypeSystem,
 	Type,
 	ArrayType,
@@ -34,7 +34,7 @@ class ArraySerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 		value: TValue[],
 		context: SerializeContext
 	): TSource[] {
-		return value.map(v =>
+		return value.map((v) =>
 			this.itemSerializer.serializeWithContext(v, context)
 		);
 	}
@@ -42,13 +42,13 @@ class ArraySerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<TValue[]> {
+	): Validation<TValue[]> {
 		if (!(value instanceof Array)) {
-			return deserializationError({
+			return invalidData({
 				message: `Expected an array but got a ${typeof value}.`,
 			});
 		}
-		const errors = new Array<DeserializationError>();
+		const errors = new Array<ValidationError>();
 		const result = new Array<TValue>(value.length);
 		for (let i = 0; i < value.length; i++) {
 			const r = this.itemSerializer.deserializeWithContext(
@@ -56,17 +56,17 @@ class ArraySerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 				context
 			);
 			if (!r.isOk) {
-				errors.push(...r.errors.map(e => e.prependPath(i)));
+				errors.push(...r.errors.map((e) => e.prependPath(i)));
 			} else {
 				result[i] = r.value;
 			}
 		}
 
 		if (errors.length > 0) {
-			return deserializationError(...errors);
+			return invalidData(...errors);
 		}
 
-		return deserializationValue(result);
+		return validData(result);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {

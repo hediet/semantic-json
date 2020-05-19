@@ -1,3 +1,3 @@
 export * from "./typeDefs";
 export * from "./typeDefsSerializer";
-export * from "../types/types";
+export * from "../types";

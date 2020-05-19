@@ -11,8 +11,8 @@ import {
 	sLiteral,
 } from "../src";
 import { sTypePackage } from "../src/schema/typeDefsSerializer";
-import { TypeSystem } from "../src/types/types";
-import { deserializationValue } from "../src/BaseDeserializationResult";
+import { TypeSystem } from "../src/types/TypeSystem";
+import { validData } from "../src/Validation";
 
 describe("Serialization Schema", () => {
 	it("works", () => {
@@ -41,7 +41,7 @@ describe("Serialization Schema", () => {
 					const c = new Contact();
 					c.firstName = v.firstName;
 					c.lastName = v.lastName;
-					return deserializationValue(c);
+					return validData(c);
 				},
 				serialize: (v) => ({
 					firstName: v.firstName,
@@ -58,7 +58,7 @@ describe("Serialization Schema", () => {
 				deserialize: (v) => {
 					const c = new ContactBook();
 					c.contacts = v.contacts;
-					return deserializationValue(c);
+					return validData(c);
 				},
 				serialize: (v) => ({ contacts: v.contacts }),
 			})
@@ -110,6 +110,9 @@ describe("Serialization Schema", () => {
 			$type: "td#TypeDefinitions",
 			packageId: "bla",
 			typeDefinitions: {
+				baz: {
+					kind: "object",
+				},
 				ContactBook: {
 					kind: "object",
 					properties: {
@@ -184,6 +187,13 @@ describe("Serialization", () => {
 	});
 });
 
+/*
+type X = { bla: number; foo: number } | { baz: number };
+const x: X = { bla: 4, foo: 1, baz: true };
+
+type Y = { foo: number; tag?: 1 } | { baz: number; tag: 2 };
+const y: Y = { foo: 1, baz: 4 };
+
 describe("bla", () => {
 	const text = sObject({
 		kind: sObject({
@@ -194,7 +204,11 @@ describe("bla", () => {
 		fileName: sObjectProp({ serializer: sString, optional: true }),
 	});
 
-	sIntersect([
+	// { ... } matches ({ ... } || { ... }) && ({ ... } || { ... }) && ...
+
+	text.refine();
+
+	const svg = sIntersect([
 		text,
 		sObject({
 			kind: sObject({
@@ -208,5 +222,26 @@ describe("bla", () => {
 	//sIntersect
 	//const svg =
 
-	// sUnionIntersecting
+	// returns a list
+	sUnionIntersecting([text, svg]);
 });
+
+interface Property<TValue, TResult> {
+	extract(value: TValue): TResult;
+}
+
+interface Condition<TValue, TResult> {
+	readonly property: Property<TValue, TResult>;
+	readonly result: TResult;
+}
+
+interface ActionDef<TValue, TAction> {
+	readonly action: TAction;
+	readonly properties: ReadonlyArray<Condition<TValue, any>>;
+	accept(value: TValue): boolean;
+}
+
+class DecisionTree<TValue, TAction> {
+	constructor(actions: ActionDef<TValue, TAction>[]) {}
+}
+*/

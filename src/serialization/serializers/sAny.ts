@@ -1,9 +1,7 @@
 import { JSONValue } from "../../JSONValue";
-import {
-	DeserializationResult,
-	deserializationValue,
-} from "../../BaseDeserializationResult";
-import { AnyType, Type, TypeSystem } from "../../types/types";
+import { Validation, validData } from "../../Validation";
+import { AnyType, Type } from "../../types";
+import { TypeSystem } from "../../types/TypeSystem";
 import { BaseSerializer } from "./BaseSerializer";
 
 export class DowncastSerializer<T extends JSONValue> extends BaseSerializer<
@@ -18,8 +16,8 @@ export class DowncastSerializer<T extends JSONValue> extends BaseSerializer<
 		return (value as any) as T;
 	}
 
-	public deserializeWithContext(value: JSONValue): DeserializationResult<T> {
-		return deserializationValue(value as T);
+	public deserializeWithContext(value: JSONValue): Validation<T> {
+		return validData(value as T);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {

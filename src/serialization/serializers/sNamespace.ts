@@ -2,9 +2,9 @@ import { BaseSerializer } from "./BaseSerializer";
 import {
 	Namespace,
 	JSONValue,
-	DeserializationResult,
-	deserializationError,
-	deserializationValue,
+	Validation,
+	invalidData,
+	validData,
 	TypeSystem,
 	Type,
 	StringType,
@@ -25,12 +25,12 @@ class NamespaceSerializer extends BaseSerializer<Namespace, string> {
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<Namespace> {
+	): Validation<Namespace> {
 		if (typeof value !== "string") {
-			return deserializationError({ message: "must be of type string" });
+			return invalidData({ message: "must be of type string" });
 		}
 		const ns = context.lookupNamespace(value);
-		return deserializationValue(ns);
+		return validData(ns);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {

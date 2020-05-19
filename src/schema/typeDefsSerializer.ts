@@ -30,7 +30,7 @@ import {
 	NullTypeDef,
 	TypeDef,
 } from "./typeDefs";
-import { deserializationValue } from "../BaseDeserializationResult";
+import { validData } from "../Validation";
 import { namespace } from "../NamespacedNamed";
 
 const typeDefinitionNs = namespace("json-types.org/type-definition");
@@ -43,8 +43,8 @@ const sUnionType = sObject({
 })
 	.refine<UnionTypeDef>({
 		canSerialize: (val): val is UnionTypeDef => val instanceof UnionTypeDef,
-		serialize: val => ({ kind: val.kind, of: val.of }),
-		deserialize: val => deserializationValue(new UnionTypeDef(val.of)),
+		serialize: (val) => ({ kind: val.kind, of: val.of }),
+		deserialize: (val) => validData(new UnionTypeDef(val.of)),
 	})
 	.defineAs(typeDefinitionNs("UnionType"));
 
@@ -52,8 +52,8 @@ const sIntersectionType = sArray(typeRef)
 	.refine<IntersectionTypeDef>({
 		canSerialize: (val): val is IntersectionTypeDef =>
 			val instanceof IntersectionTypeDef,
-		serialize: val => val.of,
-		deserialize: val => deserializationValue(new IntersectionTypeDef(val)),
+		serialize: (val) => val.of,
+		deserialize: (val) => validData(new IntersectionTypeDef(val)),
 	})
 	.defineAs(typeDefinitionNs("IntersectionType"));
 
@@ -63,8 +63,8 @@ const sStringType = sObject({
 	.refine<StringTypeDef>({
 		canSerialize: (val): val is StringTypeDef =>
 			val instanceof StringTypeDef,
-		serialize: val => ({ kind: val.kind }),
-		deserialize: val => deserializationValue(new StringTypeDef()),
+		serialize: (val) => ({ kind: val.kind }),
+		deserialize: (val) => validData(new StringTypeDef()),
 	})
 	.defineAs(typeDefinitionNs("StringType"));
 
@@ -74,8 +74,8 @@ const sBooleanType = sObject({
 	.refine<BooleanTypeDef>({
 		canSerialize: (val): val is BooleanTypeDef =>
 			val instanceof BooleanTypeDef,
-		serialize: val => ({ kind: val.kind }),
-		deserialize: val => deserializationValue(new BooleanTypeDef()),
+		serialize: (val) => ({ kind: val.kind }),
+		deserialize: (val) => validData(new BooleanTypeDef()),
 	})
 	.defineAs(typeDefinitionNs("BooleanType"));
 
@@ -85,8 +85,8 @@ const sNumberType = sObject({
 	.refine<NumberTypeDef>({
 		canSerialize: (val): val is NumberTypeDef =>
 			val instanceof NumberTypeDef,
-		serialize: val => ({ kind: val.kind }),
-		deserialize: val => deserializationValue(new NumberTypeDef()),
+		serialize: (val) => ({ kind: val.kind }),
+		deserialize: (val) => validData(new NumberTypeDef()),
 	})
 	.defineAs(typeDefinitionNs("NumberType"));
 
@@ -95,8 +95,8 @@ const sAnyType = sObject({
 })
 	.refine<AnyTypeDef>({
 		canSerialize: (val): val is AnyTypeDef => val instanceof AnyTypeDef,
-		serialize: val => ({ kind: val.kind }),
-		deserialize: val => deserializationValue(new AnyTypeDef()),
+		serialize: (val) => ({ kind: val.kind }),
+		deserialize: (val) => validData(new AnyTypeDef()),
 	})
 	.defineAs(typeDefinitionNs("AnyType"));
 
@@ -107,8 +107,8 @@ const sLiteralType = sObject({
 	.refine<LiteralTypeDef>({
 		canSerialize: (val): val is LiteralTypeDef =>
 			val instanceof LiteralTypeDef,
-		serialize: val => ({ kind: val.kind, value: val.value }),
-		deserialize: val => deserializationValue(new LiteralTypeDef(val.value)),
+		serialize: (val) => ({ kind: val.kind, value: val.value }),
+		deserialize: (val) => validData(new LiteralTypeDef(val.value)),
 	})
 	.defineAs(typeDefinitionNs("LiteralType"));
 
@@ -117,8 +117,8 @@ const sNullType = sObject({
 })
 	.refine<NullTypeDef>({
 		canSerialize: (val): val is NullTypeDef => val instanceof NullTypeDef,
-		serialize: val => ({ kind: val.kind }),
-		deserialize: val => deserializationValue(new NullTypeDef()),
+		serialize: (val) => ({ kind: val.kind }),
+		deserialize: (val) => validData(new NullTypeDef()),
 	})
 	.defineAs(typeDefinitionNs("LiteralType"));
 
@@ -132,11 +132,9 @@ const sObjectProperty = sObject({
 	.refine<ObjectPropertyDef>({
 		canSerialize: (item): item is ObjectPropertyDef =>
 			item instanceof ObjectPropertyDef,
-		serialize: val => ({ type: val.type, optional: val.optional }),
-		deserialize: val =>
-			deserializationValue(
-				new ObjectPropertyDef(val.type, val.optional, undefined)
-			),
+		serialize: (val) => ({ type: val.type, optional: val.optional }),
+		deserialize: (val) =>
+			validData(new ObjectPropertyDef(val.type, val.optional, undefined)),
 	})
 	.defineAs(typeDefinitionNs("ObjectProperty"));
 
@@ -147,8 +145,8 @@ const sArrayType = sObject({
 	.refine<ArrayTypeDef>({
 		canSerialize: (item): item is ArrayTypeDef =>
 			item instanceof ArrayTypeDef,
-		serialize: val => ({ kind: val.kind, of: val.itemType }),
-		deserialize: val => deserializationValue(new ArrayTypeDef(val.of)),
+		serialize: (val) => ({ kind: val.kind, of: val.itemType }),
+		deserialize: (val) => validData(new ArrayTypeDef(val.of)),
 	})
 	.defineAs(typeDefinitionNs("ArrayType"));
 
@@ -159,9 +157,8 @@ const sObjectType = sObject({
 	.refine<ObjectTypeDef>({
 		canSerialize: (val): val is ObjectTypeDef =>
 			val instanceof ObjectTypeDef,
-		serialize: val => ({ kind: val.kind, properties: val.properties }),
-		deserialize: val =>
-			deserializationValue(new ObjectTypeDef(val.properties)),
+		serialize: (val) => ({ kind: val.kind, properties: val.properties }),
+		deserialize: (val) => validData(new ObjectTypeDef(val.properties)),
 	})
 	.defineAs(typeDefinitionNs("ObjectType"));
 
@@ -171,16 +168,16 @@ const sMapType = sObject({
 })
 	.refine<MapTypeDef>({
 		canSerialize: (item): item is MapTypeDef => item instanceof MapTypeDef,
-		serialize: val => ({ kind: val.kind, valueType: val.valueType }),
-		deserialize: val => deserializationValue(new MapTypeDef(val.valueType)),
+		serialize: (val) => ({ kind: val.kind, valueType: val.valueType }),
+		deserialize: (val) => validData(new MapTypeDef(val.valueType)),
 	})
 	.defineAs(typeDefinitionNs("MapType"));
 
 const sTypeRef = sNamespacedName
 	.refine<TypeRefDef>({
 		canSerialize: (val): val is TypeRefDef => val instanceof TypeRefDef,
-		serialize: val => val.namespacedName,
-		deserialize: val => deserializationValue(new TypeRefDef(val)),
+		serialize: (val) => val.namespacedName,
+		deserialize: (val) => validData(new TypeRefDef(val)),
 	})
 	.defineAs(typeDefinitionNs("TypeReference"));
 
@@ -206,12 +203,12 @@ export const sTypePackage = sObject({
 	.refine<TypePackageDef>({
 		canSerialize: (val): val is TypePackageDef =>
 			val instanceof TypePackageDef,
-		serialize: val => ({
+		serialize: (val) => ({
 			packageId: val.packageNs.namespace,
 			typeDefinitions: val.definitions,
 		}),
-		deserialize: val =>
-			deserializationValue(
+		deserialize: (val) =>
+			validData(
 				new TypePackageDef(
 					namespace(val.packageId),
 					val.typeDefinitions

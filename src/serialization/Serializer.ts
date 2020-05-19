@@ -1,7 +1,8 @@
 import { JSONValue } from "../JSONValue";
 import { NamespacedName } from "../NamespacedNamed";
-import { DeserializationResult } from "../BaseDeserializationResult";
-import { Type, TypeSystem } from "../types/types";
+import { Validation } from "../Validation";
+import { Type } from "../types";
+import { TypeSystem } from "../types/TypeSystem";
 import { DeserializeContext, SerializeContext } from "./Context";
 
 export interface Serializer<TValue, TSource extends JSONValue = JSONValue> {
@@ -11,7 +12,7 @@ export interface Serializer<TValue, TSource extends JSONValue = JSONValue> {
 	deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<TValue>;
+	): Validation<TValue>;
 
 	getSerializerFor(
 		type: NamespacedName

@@ -1,9 +1,9 @@
 import { Serializer } from "..";
 import {
 	JSONValue,
-	DeserializationResult,
-	DeserializationError,
-	ErrorDeserializationResult,
+	Validation,
+	ValidationError,
+	InvalidData,
 	TypeSystem,
 	Type,
 	UnionType,
@@ -29,7 +29,7 @@ class UnionSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 	}
 
 	public canSerialize(value: unknown): value is TValue {
-		return this.serializers.some(s => s.canSerialize(value));
+		return this.serializers.some((s) => s.canSerialize(value));
 	}
 
 	public serializeWithContext(
@@ -47,10 +47,10 @@ class UnionSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<TValue> {
+	): Validation<TValue> {
 		const errors = new Array<{
 			index: number;
-			errors: DeserializationError[];
+			errors: ValidationError[];
 		}>();
 		let idx = 0;
 		for (const s of this.serializers) {
@@ -62,16 +62,16 @@ class UnionSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 			}
 			idx++;
 		}
-		return new ErrorDeserializationResult([
-			new DeserializationError({
+		return new InvalidData([
+			new ValidationError({
 				message:
 					"No serializer could deserialize the given value:\n" +
 					errors
 						.map(
-							e =>
+							(e) =>
 								`${e.index + 1}: ${e.errors
 									.map(
-										e =>
+										(e) =>
 											`(${e.path.join("/")}) ${e.message}`
 									)
 									.join("\n")}`
@@ -82,6 +82,8 @@ class UnionSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 	}
 
 	public getType(typeSystem: TypeSystem): Type {
-		return new UnionType(this.serializers.map(s => s.getType(typeSystem)));
+		return new UnionType(
+			this.serializers.map((s) => s.getType(typeSystem))
+		);
 	}
 }

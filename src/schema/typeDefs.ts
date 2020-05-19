@@ -1,7 +1,6 @@
 import { NamespacedName, Namespace } from "../NamespacedNamed";
 import { JSONValue } from "../JSONValue";
 import {
-	TypeSystem,
 	Type,
 	CustomType,
 	UnionType,
@@ -16,7 +15,8 @@ import {
 	LiteralType,
 	AnyType,
 	NullType,
-} from "../types/types";
+	TypeSystem,
+} from "../types";
 import { fromEntries } from "../utils";
 
 export class TypePackageDef {

@@ -1,7 +1,7 @@
 import {
 	JSONValue,
 	NamespacedName,
-	DeserializationResult,
+	Validation,
 	namespace,
 	TypeSystem,
 	TypeDefinition,
@@ -62,7 +62,7 @@ export class NamedSerializer<
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<TValue> {
+	): Validation<TValue> {
 		if (typeof value === "object" && value && "$ns" in value) {
 			const ns = value["$ns"] as object;
 			delete value["$ns"];

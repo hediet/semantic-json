@@ -2,9 +2,9 @@ import { BaseSerializer } from "./BaseSerializer";
 
 import {
 	JSONValue,
-	DeserializationResult,
-	deserializationError,
-	deserializationValue,
+	Validation,
+	invalidData,
+	validData,
 	TypeSystem,
 	Type,
 	LiteralType,
@@ -31,14 +31,14 @@ class LiteralSerializer<
 		return (value as any) as T;
 	}
 
-	public deserializeWithContext(value: JSONValue): DeserializationResult<T> {
+	public deserializeWithContext(value: JSONValue): Validation<T> {
 		if (value !== this.value) {
-			return deserializationError({
+			return invalidData({
 				message: `Expected "${this.value}" but got "${value}".`,
 			});
 		}
 
-		return deserializationValue(value as T);
+		return validData(value as T);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {

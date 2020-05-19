@@ -1,4 +1,4 @@
-import { DeserializationResult, JSONValue, TypeSystem, Type } from "../..";
+import { Validation, JSONValue, TypeSystem, Type } from "../..";
 import { BaseSerializer } from "./BaseSerializer";
 import { Serializer } from "..";
 import { SerializeContext, DeserializeContext } from "../Context";
@@ -6,7 +6,7 @@ import { SerializeContext, DeserializeContext } from "../Context";
 export interface RefineOptions<TValue, TRefined> {
 	canSerialize: (value: unknown) => value is TRefined;
 	serialize: (value: TRefined) => TValue;
-	deserialize: (value: TValue) => DeserializationResult<TRefined>;
+	deserialize: (value: TValue) => Validation<TRefined>;
 }
 
 export class RefinedSerializer<
@@ -42,7 +42,7 @@ export class RefinedSerializer<
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<TValue> {
+	): Validation<TValue> {
 		const r = this.underlyingSerializer.deserializeWithContext(
 			value,
 			context

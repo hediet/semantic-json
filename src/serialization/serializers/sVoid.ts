@@ -1,10 +1,10 @@
 import { BaseSerializer } from "./BaseSerializer";
 import {
 	JSONValue,
-	DeserializationResult,
-	deserializationError,
-	DeserializationError,
-	deserializationValue,
+	Validation,
+	invalidData,
+	ValidationError,
+	validData,
 	TypeSystem,
 	Type,
 	NullType,
@@ -19,17 +19,15 @@ class VoidSerializer extends BaseSerializer<void, null> {
 		return null;
 	}
 
-	public deserializeWithContext(
-		value: JSONValue
-	): DeserializationResult<void> {
+	public deserializeWithContext(value: JSONValue): Validation<void> {
 		if (value !== null) {
-			return deserializationError(
-				new DeserializationError({
+			return invalidData(
+				new ValidationError({
 					message: "Value is expected to be null, but was not.",
 				})
 			);
 		}
-		return deserializationValue(undefined);
+		return validData(undefined);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {

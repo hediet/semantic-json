@@ -1,8 +1,8 @@
 import {
 	JSONValue,
-	DeserializationResult,
-	deserializationError,
-	deserializationValue,
+	Validation,
+	invalidData,
+	validData,
 	TypeSystem,
 	Type,
 	MapType,
@@ -51,9 +51,9 @@ class MapSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 	public deserializeWithContext(
 		value: JSONValue,
 		context: DeserializeContext
-	): DeserializationResult<{ [key: string]: TValue }> {
+	): Validation<{ [key: string]: TValue }> {
 		if (typeof value !== "object" || value === null) {
-			return deserializationError({
+			return invalidData({
 				message: `Expected an object, but got ${typeof value}.`,
 			});
 		}
@@ -63,14 +63,12 @@ class MapSerializer<TValue, TSource extends JSONValue> extends BaseSerializer<
 		for (const [key, val] of Object.entries(value)) {
 			const r = this.itemSerializer.deserializeWithContext(val!, context);
 			if (!r.isOk) {
-				return deserializationError(
-					...r.errors.map(e => e.prependPath(key))
-				);
+				return invalidData(...r.errors.map((e) => e.prependPath(key)));
 			}
 			result[key] = r.value;
 		}
 
-		return deserializationValue(result);
+		return validData(result);
 	}
 
 	public getType(typeSystem: TypeSystem): Type {

@@ -1,7 +1,8 @@
 import { JSONValue } from "../../JSONValue";
 import { NamespacedName } from "../../NamespacedNamed";
-import { Type, TypeSystem } from "../../types/types";
-import { DeserializationResult } from "../../BaseDeserializationResult";
+import { Type } from "../../types";
+import { TypeSystem } from "../../types/TypeSystem";
+import { Validation } from "../../Validation";
 import { SerializeContext, DeserializeContext } from "../Context";
 import { Serializer } from "../Serializer";
 
@@ -20,16 +21,16 @@ export abstract class BaseSerializer<TValue, TSource extends JSONValue>
 	public abstract deserializeWithContext(
 		value: JSONValue,
 		context?: DeserializeContext
-	): DeserializationResult<TValue>;
+	): Validation<TValue>;
 
-	public deserialize(value: JSONValue): DeserializationResult<TValue> {
+	public deserialize(value: JSONValue): Validation<TValue> {
 		return this.deserializeWithContext(value, DeserializeContext.Default);
 	}
 
 	public deserializeTyped(
 		value: TSource,
 		context?: DeserializeContext
-	): DeserializationResult<TValue> {
+	): Validation<TValue> {
 		return this.deserializeWithContext(
 			(value as any) as JSONValue,
 			context
