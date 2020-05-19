@@ -1,0 +1,19 @@
+{
+  "typescript.tsdk": ".vscode/pnpify/typescript/lib",
+  //"mochaExplorer.files": ["test\\**\\*.test.ts"],
+  "mochaExplorer.files": [
+    "dist\\test\\**\\*.test.js"
+  ],
+  "mochaExplorer.require": [
+    "./test/setup",
+    "source-map-support/register"
+  ],
+  "mochaExplorer.logpanel": true,
+  //"mochaExplorer.base"
+  "mocha.files.glob": "dist\\test\\**\\*.test.js",
+  "mocha.requires": [
+    "foo",
+    "source-map-support/register"
+  ],
+  "npm.packageManager": "yarn"
+}

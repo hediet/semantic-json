@@ -1,0 +1,34 @@
+{
+	"name": "@hediet/semantic-json",
+	"version": "0.2.0",
+	"description": "Highly experimental. Do not use yet.",
+	"scripts": {
+		"dev": "tsc --watch",
+		"test": "mocha --require source-map-support/register \"./dist/test/**/*.test.js\""
+	},
+	"main": "./dist/src/index.js",
+	"types": "./dist/src/index.d.ts",
+	"files": [
+		"./dist",
+		"./src"
+	],
+	"author": "Henning Dieterichs",
+	"license": "MIT",
+	"devDependencies": {
+		"@types/assert": "^1.4.6",
+		"@types/chai": "^4.2.11",
+		"@types/mocha": "^7.0.2",
+		"@types/sinon": "^9.0.0",
+		"@yarnpkg/pnpify": "^2.0.0-rc.21",
+		"chai": "^4.2.0",
+		"mocha": "^7.1.2",
+		"sinon": "^9.0.2",
+		"source-map-support": "^0.5.19",
+		"ts-node": "^8.9.1",
+		"typescript": "next"
+	},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	}
+}
