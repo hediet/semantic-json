@@ -1,3 +1,0 @@
-describe("Schema", () => {
-	it("works", () => {});
-});
