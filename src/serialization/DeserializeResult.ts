@@ -38,6 +38,14 @@ export class DeserializeResult<T> {
 	) {
 		this.value = value!;
 	}
+
+	public get hasErrors(): boolean {
+		return this.errors.length > 0;
+	}
+
+	public formatError(): string {
+		return JSON.stringify(this.errors); // TODO
+	}
 }
 
 export class DeserializeResultBuilder<T> {

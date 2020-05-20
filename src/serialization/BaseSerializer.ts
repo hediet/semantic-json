@@ -11,6 +11,10 @@ export abstract class BaseSerializer<T> {
 		throw new Error("Only for compile time");
 	}
 
+	public asSerializer(): Serializer<T> {
+		return this as any;
+	}
+
 	public deserialize(
 		source: JSONValue,
 		context: DeserializeContext = DeserializeContext.default
