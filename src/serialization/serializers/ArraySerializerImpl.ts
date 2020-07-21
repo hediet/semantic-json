@@ -8,7 +8,7 @@ import {
 import { SerializeContext } from "../SerializeContext";
 import { JSONValue } from "../..";
 import {
-	isJSONValueOfType,
+	isValueOfType,
 	getTypeMismatchMessage,
 } from "../getTypeMismatchMessage";
 
@@ -30,7 +30,7 @@ export class ArraySerializerImpl<TValue>
 		value: JSONValue,
 		context: DeserializeContext
 	): DeserializeResult<TValue[]> {
-		if (!isJSONValueOfType(value, "array")) {
+		if (!isValueOfType(value, "array")) {
 			return DeserializeResult.fromError({
 				message: getTypeMismatchMessage(value, { type: "array" }),
 			});

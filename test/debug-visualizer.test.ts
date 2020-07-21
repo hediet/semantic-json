@@ -7,6 +7,7 @@ import {
 	sUnionMany,
 	sIntersect,
 } from "../src";
+import { sOpenObject } from "../src/serialization/serializers/ObjectSerializerImpl";
 
 it("intersection debug visualizer", () => {
 	class Text {
@@ -29,22 +30,12 @@ it("intersection debug visualizer", () => {
 		}
 	}
 
-	const text = sObject(
-		{
-			kind: sObject(
-				{
-					text: sLiteral(true),
-				},
-				{
-					allowUnknownProperties: true,
-				}
-			),
-			text: sString(),
-		},
-		{
-			allowUnknownProperties: true,
-		}
-	);
+	const text = sOpenObject({
+		kind: sOpenObject({
+			text: sLiteral(true),
+		}),
+		text: sString(),
+	});
 
 	const textHandler = text.refine({
 		class: Text,
@@ -54,21 +45,11 @@ it("intersection debug visualizer", () => {
 
 	const svg = sIntersect([
 		text,
-		sObject(
-			{
-				kind: sObject(
-					{
-						svg: sLiteral(true),
-					},
-					{
-						allowUnknownProperties: true,
-					}
-				),
-			},
-			{
-				allowUnknownProperties: true,
-			}
-		),
+		sOpenObject({
+			kind: sOpenObject({
+				svg: sLiteral(true),
+			}),
+		}),
 	]);
 
 	const svgHandler = svg.refine({

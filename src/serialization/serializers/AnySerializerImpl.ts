@@ -4,7 +4,7 @@ import { DeserializeContext } from "../DeserializeContext";
 import { JSONValue } from "../../JSONValue";
 import { SerializeContext } from "../SerializeContext";
 
-interface AnySerializer {
+export interface AnySerializer {
 	kind: "any";
 }
 

@@ -5,7 +5,7 @@ import { JSONValue } from "../../JSONValue";
 import { SerializeContext } from "../SerializeContext";
 import {
 	getTypeMismatchMessage,
-	isJSONValueOfType,
+	isValueOfType,
 } from "../getTypeMismatchMessage";
 import { Serializer } from "../Serializer";
 
@@ -27,7 +27,7 @@ export class MapSerializerImpl<TValue>
 		value: JSONValue,
 		context: DeserializeContext
 	): DeserializeResult<Record<string, TValue>> {
-		if (!isJSONValueOfType(value, "object")) {
+		if (!isValueOfType(value, "object")) {
 			return DeserializeResult.fromError({
 				message: getTypeMismatchMessage(value, { type: "object" }),
 			});

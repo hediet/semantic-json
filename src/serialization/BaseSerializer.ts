@@ -157,6 +157,10 @@ export abstract class BaseSerializerImpl<T, TInterface> extends BaseSerializer<
 	public get TInterface(): TInterface {
 		throw new Error("Only For Runtime");
 	}
+
+	public get TSerializer(): TInterface & BaseSerializer<T> {
+		throw new Error("Only For Runtime");
+	}
 }
 
 export type Refinement<T, TIntermediate> =

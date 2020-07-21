@@ -5,9 +5,10 @@ import { DeserializeContext } from "../DeserializeContext";
 import { DeserializeResult, DeserializeError } from "../DeserializeResult";
 import { SerializeContext } from "../SerializeContext";
 import {
-	isJSONValueOfType,
+	isValueOfType,
 	getTypeMismatchMessage,
 } from "../getTypeMismatchMessage";
+import { getType } from "../getTypeMismatchMessage";
 
 export interface ObjectSerializer {
 	kind: "object";
@@ -37,7 +38,7 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 		source: JSONValue,
 		context: DeserializeContext
 	): DeserializeResult<T> {
-		if (!isJSONValueOfType(source, "object")) {
+		if (!isValueOfType(source, "object")) {
 			return DeserializeResult.fromError({
 				message: getTypeMismatchMessage(source, { type: "object" }),
 			});
@@ -76,7 +77,7 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 	}
 
 	protected internalCanSerialize(value: unknown): value is T {
-		if (typeof value !== "object" || value === null) {
+		if (!isValueOfType(value, "object")) {
 			return false;
 		}
 
@@ -106,6 +107,10 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 		value: T,
 		context: SerializeContext
 	): JSONValue {
+		if (!isValueOfType(value, "object")) {
+			throw new Error(getTypeMismatchMessage(value, { type: "object" }));
+		}
+
 		const result: Record<string, JSONValue> = {};
 		for (const prop of this.propertiesList) {
 			if (prop.name in value) {
@@ -158,12 +163,25 @@ export class ObjectSerializerProperty<
 	}
 }
 
+type Force<T> = { val: { [TKey in keyof T]: T[TKey] } }["val"];
+
+export function sOpenObject<
+	TProperties extends ObjectSerializerPropertiesOptions
+>(
+	properties: TProperties,
+	options?: {}
+): SerializerOfKind<"object", Force<ObjectSerializerTypeCtor<TProperties>>> {
+	return sObject<TProperties>(properties, {
+		allowUnknownProperties: true,
+	});
+}
+
 export function sObject<TProperties extends ObjectSerializerPropertiesOptions>(
 	properties: TProperties,
 	options?: {
 		allowUnknownProperties?: boolean;
 	}
-): SerializerOfKind<"object", ObjectSerializerTypeCtor<TProperties>> {
+): SerializerOfKind<"object", Force<ObjectSerializerTypeCtor<TProperties>>> {
 	options = options || {};
 	return new ObjectSerializerImpl<any>(
 		normalizeProperties(properties),

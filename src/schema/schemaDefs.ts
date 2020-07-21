@@ -193,9 +193,10 @@ export class IntersectionSchemaDef extends BaseSchemaDef {
 	}
 
 	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
-		return sIntersectionMany(
+		throw new Error("Not implemented");
+		/*return sIntersectionMany(
 			this.of.map((t) => t.toSerializer(serializerSystem))
-		);
+		);*/
 	}
 }
 

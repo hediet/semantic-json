@@ -9,13 +9,7 @@ import {
 } from "../DeserializeResult";
 import { SerializeContext } from "../SerializeContext";
 
-class Test {
-	constructor(public someting: any) {}
-}
-
-export let t = new Test("some thing");
-
-interface UnionSerializer {
+export interface UnionSerializer {
 	kind: "union";
 	eager: boolean;
 	unitedSerializers: readonly Serializer<any>[];

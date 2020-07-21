@@ -1,9 +1,17 @@
-export { AnySerializerImpl } from "./AnySerializerImpl";
+export { AnySerializerImpl, AnySerializer } from "./AnySerializerImpl";
 
-export { PrimitiveSerializerImpl } from "./PrimitiveSerializerImpl";
-export { LiteralSerializerImpl } from "./LiteralSerializerImpl";
+export {
+	PrimitiveSerializerImpl,
+	PrimitiveSerializer,
+	Primitives,
+} from "./PrimitiveSerializerImpl";
+export {
+	LiteralSerializerImpl,
+	LiteralSerializer,
+	LiteralType,
+} from "./LiteralSerializerImpl";
 
-export { UnionSerializerImpl } from "./UnionSerializerImpl";
+export { UnionSerializerImpl, UnionSerializer } from "./UnionSerializerImpl";
 export { IntersectionSerializerImpl } from "./IntersectionSerializerImpl";
 
 export { DelegatingSerializerImpl } from "./DelegatingSerializerImpl";

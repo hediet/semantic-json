@@ -43,7 +43,9 @@ export class LiteralSerializerImpl<T extends LiteralType>
 		context: SerializeContext
 	): JSONValue {
 		if (value !== this.value) {
-			throw new Error("Invalid value");
+			throw new Error(
+				`Invalid value. Expected ${this.value}, but got ${value}`
+			);
 		}
 		return this.value;
 	}

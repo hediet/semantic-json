@@ -5,6 +5,7 @@ import {
 	sObjectProp,
 	ObjectSerializerImpl,
 	Serializer,
+	BaseSerializer,
 } from "../../src";
 import { deepEqual } from "assert";
 import { deserializeJson } from "../utils";

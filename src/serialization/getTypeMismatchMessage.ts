@@ -1,5 +1,3 @@
-import { JSONValue } from "../JSONValue";
-
 export type Types = {
 	array: any[];
 	string: string;
@@ -10,7 +8,7 @@ export type Types = {
 };
 
 export function getTypeMismatchMessage(
-	value: JSONValue,
+	value: unknown,
 	expected:
 		| { type: keyof Types }
 		| { value: Types["string" | "number" | "boolean" | "null"] }
@@ -40,7 +38,7 @@ export function getTypeMismatchMessage(
 	return `${expectedMsg}, ${butGotMessage}.`;
 }
 
-function getType(value: JSONValue): keyof Types {
+export function getType(value: unknown): keyof Types {
 	if (value === null) {
 		return "null";
 	} else if (Array.isArray(value)) {
@@ -58,8 +56,8 @@ function getType(value: JSONValue): keyof Types {
 	return type;
 }
 
-export function isJSONValueOfType<TTypeName extends keyof Types>(
-	value: JSONValue,
+export function isValueOfType<TTypeName extends keyof Types>(
+	value: unknown,
 	expectedTypeName: TTypeName
 ): value is Types[TTypeName] {
 	return getType(value) == expectedTypeName;

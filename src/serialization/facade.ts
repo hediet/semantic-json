@@ -27,36 +27,36 @@ export {
 	ObjectPropInfo,
 } from "./serializers/ObjectSerializerImpl";
 
-export function sAny(): AnySerializerImpl {
+export function sAny(): AnySerializerImpl["TSerializer"] {
 	return new AnySerializerImpl();
 }
 
-export function sString(): PrimitiveSerializerImpl<"string"> {
+export function sString(): PrimitiveSerializerImpl<"string">["TSerializer"] {
 	return new PrimitiveSerializerImpl("string");
 }
 
-export function sNumber(): PrimitiveSerializerImpl<"number"> {
+export function sNumber(): PrimitiveSerializerImpl<"number">["TSerializer"] {
 	return new PrimitiveSerializerImpl("number");
 }
 
-export function sBoolean(): PrimitiveSerializerImpl<"boolean"> {
+export function sBoolean(): PrimitiveSerializerImpl<"boolean">["TSerializer"] {
 	return new PrimitiveSerializerImpl("boolean");
 }
 
-export function sNull(): LiteralSerializerImpl<"null"> {
-	return new LiteralSerializerImpl("null");
+export function sNull(): LiteralSerializerImpl<null>["TSerializer"] {
+	return new LiteralSerializerImpl(null);
 }
 
 export function sLiteral<T extends LiteralType>(
 	value: T
-): LiteralSerializerImpl<T> {
+): LiteralSerializerImpl<T>["TSerializer"] {
 	return new LiteralSerializerImpl(value);
 }
 
 export function sUnionMany<T extends Serializer<any>[]>(
 	unitedSerializers: T,
 	options: { eager: boolean }
-): UnionSerializerImpl<T[number]["T"]> {
+): UnionSerializerImpl<T[number]["T"]>["TSerializer"] {
 	return new UnionSerializerImpl(unitedSerializers as any, options.eager);
 }
 
@@ -107,7 +107,7 @@ function sInteger(): Serializer<number> {
 
 export function sArrayOf<T>(
 	itemSerializer: Serializer<T>
-): ArraySerializerImpl<T> {
+): ArraySerializerImpl<T>["TSerializer"] {
 	return new ArraySerializerImpl<any>(itemSerializer);
 }
 
@@ -115,12 +115,8 @@ function sTuple() {}
 
 export function sMap<TValue>(
 	valueSerializer: Serializer<TValue>
-): MapSerializerImpl<TValue> {
+): MapSerializerImpl<TValue>["TSerializer"] {
 	return new MapSerializerImpl(valueSerializer);
-}
-
-export function sVoid(): Serializer<void> {
-	return sNull() as any;
 }
 
 /**
