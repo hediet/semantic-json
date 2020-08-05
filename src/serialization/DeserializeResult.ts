@@ -46,6 +46,13 @@ export class DeserializeResult<T> {
 	public formatError(): string {
 		return JSON.stringify(this.errors); // TODO
 	}
+
+	public getValidValue(): T {
+		if (this.hasErrors) {
+			throw new Error(this.formatError());
+		}
+		return this.value;
+	}
 }
 
 export class DeserializeResultBuilder<T> {

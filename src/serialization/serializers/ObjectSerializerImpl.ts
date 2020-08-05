@@ -8,7 +8,6 @@ import {
 	isValueOfType,
 	getTypeMismatchMessage,
 } from "../getTypeMismatchMessage";
-import { getType } from "../getTypeMismatchMessage";
 
 export interface ObjectSerializer {
 	kind: "object";
@@ -124,6 +123,10 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 		}
 
 		return result as any;
+	}
+
+	public opened(): ObjectSerializerImpl<T> {
+		return new ObjectSerializerImpl(this.properties, true);
 	}
 }
 

@@ -7,22 +7,17 @@ import {
 	AnySerializerImpl,
 	MapSerializerImpl,
 	LazySerializerImpl,
-	NamedSerializerImpl,
 } from "./serializers";
 import { LiteralType } from "./serializers/LiteralSerializerImpl";
 import { BaseSerializer } from "./BaseSerializer";
 import { NamespacedName, namespace } from "../NamespacedNamed";
-import {
-	Serializer,
-	SerializerOfKind,
-	SerializerOf,
-	NamedSerializer,
-} from "./Serializer";
+import { Serializer, NamedSerializer } from "./Serializer";
 import { DeserializeResult } from "./DeserializeResult";
 import { UnionToIntersection } from "./serializers/IntersectionSerializerImpl";
 
 export {
 	sObject,
+	sOpenObject,
 	sObjectProp,
 	ObjectPropInfo,
 } from "./serializers/ObjectSerializerImpl";
