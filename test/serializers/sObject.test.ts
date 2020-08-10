@@ -2,7 +2,7 @@ import {
 	sObject,
 	sString,
 	sBoolean,
-	sObjectProp,
+	sProp,
 	ObjectSerializerImpl,
 	Serializer,
 	BaseSerializer,
@@ -14,9 +14,8 @@ describe("sObject", () => {
 	const serializer = sObject({
 		requiredStr: sString(),
 		requiredBool: sBoolean(),
-		optionalBool: sObjectProp({ serializer: sBoolean(), optional: true }),
-		strWithDefaultValue: sObjectProp({
-			serializer: sString(),
+		optionalBool: sProp(sBoolean(), { optional: true }),
+		strWithDefaultValue: sProp(sString(), {
 			optional: { withDefault: "myDefault" },
 		}),
 	});

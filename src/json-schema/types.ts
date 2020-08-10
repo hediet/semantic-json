@@ -3,7 +3,10 @@ export type JsonSchema =
 	| StringJsonSchema
 	| ArrayJsonSchema
 	| ObjectJsonSchema
-	| JsonSchemaReference;
+	| JsonSchemaReference
+	| EmptyJsonSchema;
+
+export interface EmptyJsonSchema {}
 
 export interface JsonSchemaReference {
 	$ref: string;

@@ -2,7 +2,7 @@ import {
 	sLazy,
 	sObject,
 	sLiteral,
-	sObjectProp,
+	sProp,
 	sBoolean,
 	sMap,
 	sNamespacedName,
@@ -118,8 +118,7 @@ const sNullType = sObject({
 
 const sObjectProperty = sObject({
 	schema: typeRef,
-	optional: sObjectProp({
-		serializer: sBoolean(),
+	optional: sProp(sBoolean(), {
 		optional: { withDefault: false },
 	}),
 })

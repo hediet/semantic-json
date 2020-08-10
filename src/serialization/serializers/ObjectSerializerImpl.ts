@@ -13,6 +13,7 @@ export interface ObjectSerializer {
 	kind: "object";
 	properties: Record<string, ObjectSerializerProperty<any>>;
 	allowUnknownProperties: boolean;
+	propertiesList: ObjectSerializerProperty<unknown>[];
 }
 
 export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
@@ -222,21 +223,38 @@ function normalizeProperties<T extends ObjectSerializerPropertiesOptions>(
 	return normalizedProps;
 }
 
-export function sObjectProp<TType>(
-	objectPropInfo: ObjectPropInfo<TType> & {
+export function sOptionalProp<TType>(
+	serializer: Serializer<TType>,
+	objectPropInfo: ObjectPropInfo = {}
+): ObjectSerializerProperty<TType, "optional"> {
+	return new ObjectSerializerProperty(
+		"(not set yet)",
+		serializer,
+		objectPropInfo.description,
+		true,
+		undefined
+	);
+}
+
+export function sProp<TType>(
+	serializer: Serializer<TType>,
+	objectPropInfo: ObjectPropInfo & {
 		optional: { withDefault: TType };
 	}
 ): ObjectSerializerProperty<TType, "optionalWithDefault">;
-export function sObjectProp<TType>(
-	objectPropInfo: ObjectPropInfo<TType> & { optional: true }
+export function sProp<TType>(
+	serializer: Serializer<TType>,
+	objectPropInfo: ObjectPropInfo & { optional: true }
 ): ObjectSerializerProperty<TType, "optional">;
-export function sObjectProp<TType>(
-	objectPropInfo: ObjectPropInfo<TType> & {
+export function sProp<TType>(
+	serializer: Serializer<TType>,
+	objectPropInfo: ObjectPropInfo & {
 		optional?: boolean | { withDefault: TType };
 	}
 ): ObjectSerializerProperty<TType, "ordinary">;
-export function sObjectProp(
-	objectPropInfo: ObjectPropInfo<any> & {
+export function sProp(
+	serializer: Serializer<any>,
+	objectPropInfo: ObjectPropInfo & {
 		optional?: boolean | { withDefault: any };
 	}
 ): ObjectSerializerProperty<any, any> {
@@ -249,15 +267,14 @@ export function sObjectProp(
 	}
 	return new ObjectSerializerProperty(
 		"(not set yet)",
-		objectPropInfo.serializer,
+		serializer,
 		objectPropInfo.description,
 		!!objectPropInfo.optional,
 		defaultVal
 	);
 }
 
-export interface ObjectPropInfo<TValue> {
-	serializer: Serializer<TValue>;
+export interface ObjectPropInfo {
 	description?: string;
 }
 

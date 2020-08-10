@@ -12,7 +12,7 @@ import {
 	sLiteral,
 	sNull,
 	sObject,
-	sObjectProp,
+	sProp,
 	sArrayOf,
 	sAny,
 	sMap,
@@ -317,13 +317,13 @@ export class ObjectSchemaDef extends BaseSchemaDef {
 				Object.entries(this.properties).map(
 					([propertyName, propertyInfo]) => [
 						propertyName,
-						sObjectProp({
-							serializer: propertyInfo.schema.toSerializer(
-								serializerSystem
-							),
-							optional: propertyInfo.optional,
-							// TODO other props
-						}),
+						sProp(
+							propertyInfo.schema.toSerializer(serializerSystem),
+							{
+								optional: propertyInfo.optional,
+								// TODO other props
+							}
+						),
 					]
 				)
 			)

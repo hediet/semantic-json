@@ -18,7 +18,8 @@ import { UnionToIntersection } from "./serializers/IntersectionSerializerImpl";
 export {
 	sObject,
 	sOpenObject,
-	sObjectProp,
+	sProp,
+	sOptionalProp,
 	ObjectPropInfo,
 } from "./serializers/ObjectSerializerImpl";
 

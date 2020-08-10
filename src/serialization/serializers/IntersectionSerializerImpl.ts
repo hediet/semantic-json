@@ -3,7 +3,7 @@ import {
 	ObjectSerializerImpl,
 	ObjectPropInfo,
 	ObjectSerializerProperty,
-	sObjectProp,
+	sProp,
 	sObject,
 } from "./ObjectSerializerImpl";
 import { Serializer, SerializerOfKind } from "../Serializer";
@@ -15,6 +15,7 @@ import { sUnionMany, sIntersectionMany } from "../facade";
 
 export interface IntersectionSerializer {
 	kind: "intersection";
+	intersectedSerializers: Serializer<unknown>[];
 }
 
 export class IntersectionSerializerImpl<T extends unknown[]>
