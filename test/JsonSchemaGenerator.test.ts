@@ -25,18 +25,20 @@ describe("JsonSchemaGenerator", () => {
 					sOpenObject({
 						text: sString(),
 						emphasis: sOptionalProp(
-							sUnion([
-								sLiteral("style1"),
-								sLiteral("style2"),
-								sLiteral("style3"),
-								sString(),
-							]),
-							{}
+							sUnion(
+								[
+									sLiteral("style1"),
+									sLiteral("style2"),
+									sLiteral("style3"),
+									sString(),
+								],
+								{ inclusive: true }
+							)
 						),
 					})
 				),
-				segment: sOptionalProp(sString(), {}),
-				isMarked: sOptionalProp(sBoolean(), {}),
+				segment: sOptionalProp(sString()),
+				isMarked: sOptionalProp(sBoolean()),
 			}).defineAs(namespace("hediet.de/visualization")("node"))
 		);
 
@@ -64,7 +66,7 @@ describe("JsonSchemaGenerator", () => {
 								properties: {
 									text: { type: "string" },
 									emphasis: {
-										oneOf: [
+										anyOf: [
 											{ enum: ["style1"] },
 											{ enum: ["style2"] },
 											{ enum: ["style3"] },

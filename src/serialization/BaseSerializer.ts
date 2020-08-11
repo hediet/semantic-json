@@ -19,6 +19,10 @@ export abstract class BaseSerializer<T> {
 		source: JSONValue,
 		context: DeserializeContext = DeserializeContext.default
 	): DeserializeResult<T> {
+		if (source === undefined) {
+			throw new Error("Got 'undefined' which is not valid JSON!");
+		}
+
 		if (typeof source === "object" && source !== null) {
 			if ("$ns" in source && context.firstDeserializationOnValue) {
 				const ns = source["$ns"] as object;

@@ -14,6 +14,7 @@ import { NamespacedName, namespace } from "../NamespacedNamed";
 import { Serializer, NamedSerializer } from "./Serializer";
 import { DeserializeResult } from "./DeserializeResult";
 import { UnionToIntersection } from "./serializers/IntersectionSerializerImpl";
+import { UnionProcessingStrategy } from "./serializers/UnionSerializerImpl";
 
 export {
 	sObject,
@@ -51,9 +52,12 @@ export function sLiteral<T extends LiteralType>(
 
 export function sUnionMany<T extends Serializer<any>[]>(
 	unitedSerializers: T,
-	options: { eager: boolean }
+	options: { processingStrategy: UnionProcessingStrategy }
 ): UnionSerializerImpl<T[number]["T"]>["TSerializer"] {
-	return new UnionSerializerImpl(unitedSerializers as any, options.eager);
+	return new UnionSerializerImpl(
+		unitedSerializers as any,
+		options.processingStrategy
+	);
 }
 
 export function sIntersectionMany<T extends Serializer<any>[]>(
@@ -69,9 +73,12 @@ export function sIntersectionMany<T extends Serializer<any>[]>(
 }
 
 export function sUnion<T extends Serializer<any>[]>(
-	unitedSerializers: T
+	unitedSerializers: T,
+	options: { inclusive?: boolean } = {}
 ): Serializer<T[number]["T"]> {
-	return sUnionMany(unitedSerializers, { eager: true }).refine<any>({
+	return sUnionMany(unitedSerializers, {
+		processingStrategy: options.inclusive ? "first" : "firstExclusive",
+	}).refine<any>({
 		canSerialize: (item): item is T[number]["T"] =>
 			unitedSerializers.some((s) => s.canSerialize(item)),
 		fromIntermediate: (item) => DeserializeResult.fromValue(item[0]),

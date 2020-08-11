@@ -169,7 +169,7 @@ export class UnionSchemaDef extends BaseSchemaDef {
 	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
 		const base = sUnionMany(
 			this.of.map((t) => t.toSerializer(serializerSystem)),
-			{ eager: false }
+			{ processingStrategy: "all" }
 		);
 
 		return base.refine<AnnotatedJSON>({

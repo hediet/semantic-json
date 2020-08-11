@@ -1,4 +1,4 @@
-import { BaseSerializer, BaseSerializerImpl } from "../BaseSerializer";
+import { BaseSerializerImpl } from "../BaseSerializer";
 import { Serializer } from "../Serializer";
 import { JSONValue } from "../../JSONValue";
 import { DeserializeContext } from "../DeserializeContext";
@@ -11,18 +11,22 @@ import { SerializeContext } from "../SerializeContext";
 
 export interface UnionSerializer {
 	kind: "union";
-	eager: boolean;
+	exclusive: boolean;
 	unitedSerializers: readonly Serializer<any>[];
 }
+
+export type UnionProcessingStrategy = "all" | "first" | "firstExclusive";
 
 export class UnionSerializerImpl<T>
 	extends BaseSerializerImpl<T[], UnionSerializer>
 	implements UnionSerializer {
 	public readonly kind = "union";
 
+	public readonly exclusive = this.processingStrategy === "firstExclusive";
+
 	constructor(
 		public readonly unitedSerializers: readonly Serializer<T>[],
-		public readonly eager: boolean
+		public readonly processingStrategy: UnionProcessingStrategy
 	) {
 		super();
 	}
@@ -40,7 +44,7 @@ export class UnionSerializerImpl<T>
 			const r = s.deserialize(source, innerContext);
 			if (r.errors.length === 0) {
 				result.push(r.value);
-				if (this.eager) {
+				if (this.processingStrategy !== "all") {
 					break;
 				}
 			} else {

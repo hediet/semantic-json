@@ -58,7 +58,9 @@ it("intersection debug visualizer", () => {
 		fromIntermediate: (s) => new Svg(s.text),
 	});
 
-	const validTypes = sUnionMany([svgHandler, textHandler], { eager: false });
+	const validTypes = sUnionMany([svgHandler, textHandler], {
+		processingStrategy: "all",
+	});
 	const result = validTypes.deserialize({
 		kind: {
 			text: true,

@@ -52,11 +52,17 @@ export class JsonSchemaGenerator {
 					items: this.getJsonSchema(s.itemSerializer),
 				};
 			case "union":
-				return {
-					oneOf: s.unitedSerializers.map((s) =>
-						this.getJsonSchema(s)
-					),
-				};
+				const united = s.unitedSerializers.map((s) =>
+					this.getJsonSchema(s)
+				);
+
+				return s.exclusive
+					? {
+							oneOf: united,
+					  }
+					: {
+							anyOf: united,
+					  };
 			case "intersection":
 				return {
 					allOf: s.intersectedSerializers.map((s) =>
