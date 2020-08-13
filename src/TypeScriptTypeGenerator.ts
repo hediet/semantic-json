@@ -60,13 +60,20 @@ export class TypeScriptTypeGenerator {
 			case "primitive":
 				return s.primitive;
 			case "object":
-				return `{${Object.entries(s.properties)
-					.map(
-						([k, v]) =>
-							`\n${"\t".repeat(indentation + 1)}${k}${
-								v.isOptional ? "?" : ""
-							}: ${this._getType(v.serializer, indentation + 1)};`
-					)
+				return `{${s.propertiesList
+					.map((prop) => {
+						const indent = `\n${"\t".repeat(indentation + 1)}`;
+						let result = `${indent}${prop.name}${
+							prop.isOptional ? "?" : ""
+						}: ${this._getType(prop.serializer, indentation + 1)};`;
+						if (prop.description) {
+							const lines = prop.description.split("\n");
+							result = `${indent}/**${lines.map(
+								(l) => `${indent} * ${l}`
+							)}${indent} */${result}`;
+						}
+						return result;
+					})
 					.join("")}\n${"\t".repeat(indentation)}}`;
 			case "map":
 				return `Record<string, ${this._getType(

@@ -77,7 +77,12 @@ export class JsonSchemaGenerator {
 					properties: fromEntries(
 						s.propertiesList.map((p) => [
 							p.name,
-							this.getJsonSchema(p.serializer),
+							{
+								...this.getJsonSchema(p.serializer),
+								...(p.description
+									? { description: p.description }
+									: {}),
+							},
 						])
 					),
 					required: s.propertiesList

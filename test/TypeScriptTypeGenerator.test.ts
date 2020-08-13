@@ -9,6 +9,7 @@ import {
 	sUnion,
 	sLiteral,
 	sBoolean,
+	sProp,
 } from "../src";
 import { namespace } from "../src/NamespacedNamed";
 import { deepEqual, deepStrictEqual } from "assert";
@@ -22,7 +23,7 @@ describe("TypeScriptTypeGenerator", () => {
 				children: sArrayOf(sTreeNode),
 				items: sArrayOf(
 					sOpenObject({
-						text: sString(),
+						text: sProp(sString(), { description: "The text" }),
 						emphasis: sOptionalProp(
 							sUnion([
 								sLiteral("style1"),
@@ -71,6 +72,9 @@ describe("TypeScriptTypeGenerator", () => {
                 type Node = {
                     children: (Node)[];
                     items: ({
+                        /**
+                         * The text
+                         */
                         text: string;
                         emphasis?: "style1" | "style2" | "style3" | string;
                     })[];
