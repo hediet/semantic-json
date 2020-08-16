@@ -46,6 +46,11 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 
 		const errors = new Array<DeserializeError>();
 		const result: any = {};
+		if (this.allowUnknownProperties) {
+			// we want to keep unknown properties
+			// known properties will be overwritten
+			Object.assign(result, source);
+		}
 		const innerContext = context.withFirstDeserializationOnValue();
 		for (const prop of this.propertiesList) {
 			if (!(prop.name in source)) {
@@ -56,7 +61,6 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 						})
 					);
 				} else if (prop.defaultValue) {
-					//debugger;
 					result[prop.name] = prop.defaultValue.value;
 				}
 			} else {
@@ -70,6 +74,8 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 				);
 				if (newPropVal.hasValue) {
 					result[prop.name] = newPropVal.value;
+				} else {
+					result[prop.name] = undefined;
 				}
 			}
 		}
