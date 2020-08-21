@@ -1,6 +1,10 @@
 import { JSONValue } from "../JSONValue";
 import { DeserializeContext } from "./DeserializeContext";
-import { DeserializeResult, DeserializeError } from "./DeserializeResult";
+import {
+	DeserializeResult,
+	DeserializeError,
+	UnexpectedPropertyTree,
+} from "./DeserializeResult";
 import { NamespacedName, namespace } from "../NamespacedNamed";
 import { Serializer, NamedSerializer, SerializerOfKind } from "./Serializer";
 import { fromEntries } from "../utils";
@@ -23,11 +27,13 @@ export abstract class BaseSerializer<T> {
 			throw new Error("Got 'undefined' which is not valid JSON!");
 		}
 
+		let childContext = context.withoutReportUnexpectedPropertiesAsError();
+
 		if (typeof source === "object" && source !== null) {
-			if ("$ns" in source && context.firstDeserializationOnValue) {
+			if ("$ns" in source && childContext.firstDeserializationOnValue) {
 				const ns = source["$ns"] as object;
 
-				context = context.withPrefixes(
+				childContext = childContext.withPrefixes(
 					fromEntries(
 						Object.entries(ns).map(([key, nsValue]) => {
 							if (typeof nsValue !== "string") {
@@ -43,45 +49,38 @@ export abstract class BaseSerializer<T> {
 			}
 		}
 
-		const r = this.internalDeserialize(source, context);
+		let r = this.internalDeserialize(source, childContext);
 
-		if (typeof source === "object" && source !== null) {
-			if (
-				context.firstDeserializationOnValue &&
-				r.participatedClosedObjects.length > 0
-			) {
-				const unexpectedProperties = new Set(Object.keys(source));
-				for (const o of r.participatedClosedObjects) {
-					if (o.allowUnknownProperties) {
-						unexpectedProperties.clear();
-						break;
-					}
-					for (const p of o.propertiesList) {
-						unexpectedProperties.delete(p.name);
-					}
-				}
-				if (unexpectedProperties.size > 0) {
-					const errors = r.errors.slice(0);
-					for (const unexpectedPropName of unexpectedProperties) {
-						if (unexpectedPropName === "$ns") {
-							continue;
-						}
-						errors.push(
-							DeserializeError.from({
-								message: `Unexpected property "${unexpectedPropName}"`,
-								path: [unexpectedPropName],
-							})
-						);
-					}
-					return new DeserializeResult(
-						r.hasValue,
-						r.value,
-						errors,
-						[]
+		if (childContext.reportUnexpectedPropertiesAsError) {
+			const errors = [...r.errors];
+			const processPropertyTree = (
+				path: (number | string)[],
+				tree: UnexpectedPropertyTree
+			) => {
+				for (const unexpectedPropName of tree.unprocessedProperties) {
+					errors.push(
+						DeserializeError.from({
+							message: `Unexpected property "${unexpectedPropName}"`,
+							path: [...path, unexpectedPropName],
+						})
 					);
 				}
+				for (const [key, value] of Object.entries(tree.properties)) {
+					processPropertyTree([...path, key], value);
+				}
+			};
+
+			if (r.unprocessedPropertyTree) {
+				processPropertyTree([], r.unprocessedPropertyTree);
 			}
+			r = new DeserializeResult(
+				r.hasValue,
+				r.value,
+				errors,
+				r.unprocessedPropertyTree
+			);
 		}
+
 		return r;
 	}
 

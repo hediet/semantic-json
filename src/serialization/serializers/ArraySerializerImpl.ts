@@ -6,7 +6,7 @@ import {
 	DeserializeError,
 } from "..";
 import { SerializeContext } from "../SerializeContext";
-import { JSONValue } from "../..";
+import { JSONValue, UnexpectedPropertyTree } from "../..";
 import {
 	isValueOfType,
 	getTypeMismatchMessage,
@@ -38,6 +38,10 @@ export class ArraySerializerImpl<TValue>
 
 		const errors = new Array<DeserializeError>();
 		const result = new Array<TValue>(value.length);
+		let propertyInfos:
+			| Record<string | number, UnexpectedPropertyTree>
+			| undefined = undefined;
+
 		for (let i = 0; i < value.length; i++) {
 			const r = this.itemSerializer.deserialize(value[i], context);
 			if (r.errors.length > 0) {
@@ -48,13 +52,22 @@ export class ArraySerializerImpl<TValue>
 			} else {
 				result[i] = undefined as any;
 			}
+			if (r.unprocessedPropertyTree !== undefined) {
+				if (!propertyInfos) {
+					propertyInfos = {};
+				}
+				propertyInfos[i] = r.unprocessedPropertyTree;
+			}
 		}
 
-		if (errors.length > 0) {
-			return DeserializeResult.fromValueWithError(result, ...errors);
-		}
-
-		return DeserializeResult.fromValue(result);
+		return new DeserializeResult(
+			true,
+			result,
+			errors,
+			propertyInfos
+				? new UnexpectedPropertyTree(propertyInfos, new Set())
+				: undefined
+		);
 	}
 
 	protected internalCanSerialize(value: unknown): value is TValue[] {

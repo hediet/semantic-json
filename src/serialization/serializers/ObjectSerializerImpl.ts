@@ -2,7 +2,11 @@ import { BaseSerializerImpl } from "../BaseSerializer";
 import { Serializer, SerializerOfKind } from "../Serializer";
 import { JSONValue } from "../../JSONValue";
 import { DeserializeContext } from "../DeserializeContext";
-import { DeserializeResult, DeserializeError } from "../DeserializeResult";
+import {
+	DeserializeResult,
+	DeserializeError,
+	UnexpectedPropertyTree,
+} from "../DeserializeResult";
 import { SerializeContext } from "../SerializeContext";
 import {
 	isValueOfType,
@@ -14,6 +18,7 @@ export interface ObjectSerializer {
 	properties: Record<string, ObjectSerializerProperty<any>>;
 	allowUnknownProperties: boolean;
 	propertiesList: ObjectSerializerProperty<unknown>[];
+	opened(): this;
 }
 
 export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
@@ -23,7 +28,7 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 
 	constructor(
 		public readonly properties: {
-			[TName in keyof T]: ObjectSerializerProperty<T[TName]>;
+			readonly [TName in keyof T]: ObjectSerializerProperty<T[TName]>;
 		},
 		public readonly allowUnknownProperties: boolean
 	) {
@@ -51,7 +56,14 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 			// known properties will be overwritten
 			Object.assign(result, source);
 		}
+
 		const innerContext = context.withFirstDeserializationOnValue();
+		let propertyInfos:
+			| Record<string | number, UnexpectedPropertyTree>
+			| undefined = undefined;
+		const unexpectedProperties = this.allowUnknownProperties
+			? new Set<string>()
+			: new Set<string>(Object.keys(source).filter((s) => s !== "$ns"));
 		for (const prop of this.propertiesList) {
 			if (!(prop.name in source)) {
 				if (!prop.isOptional) {
@@ -65,10 +77,20 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 				}
 			} else {
 				const propVal = (source as any)[prop.name];
+				unexpectedProperties.delete(prop.name);
 				const newPropVal = prop.serializer.deserialize(
 					propVal,
 					innerContext
 				);
+
+				if (newPropVal.unprocessedPropertyTree) {
+					if (!propertyInfos) {
+						propertyInfos = {};
+					}
+					propertyInfos[prop.name] =
+						newPropVal.unprocessedPropertyTree;
+				}
+
 				errors.push(
 					...newPropVal.errors.map((e) => e.prependPath(prop.name))
 				);
@@ -79,7 +101,16 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 				}
 			}
 		}
-		return new DeserializeResult(true, result, errors, [this]);
+
+		let unexpectedPropTree: UnexpectedPropertyTree | undefined = undefined;
+		if (propertyInfos || unexpectedProperties.size !== 0) {
+			unexpectedPropTree = new UnexpectedPropertyTree(
+				propertyInfos || {},
+				unexpectedProperties
+			);
+		}
+
+		return new DeserializeResult(true, result, errors, unexpectedPropTree);
 	}
 
 	protected internalCanSerialize(value: unknown): value is T {
@@ -132,8 +163,8 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 		return result as any;
 	}
 
-	public opened(): ObjectSerializerImpl<T> {
-		return new ObjectSerializerImpl(this.properties, true);
+	public opened(): this {
+		return new ObjectSerializerImpl(this.properties, true) as any;
 	}
 }
 

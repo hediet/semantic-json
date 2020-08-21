@@ -43,6 +43,7 @@ export class MapSerializerImpl<TValue>
 			const r = this.valueSerializer.deserialize(val!, childContext);
 			errors.push(...r.errors.map((e) => e.prependPath(key)));
 			result[key] = r.value;
+			// TODO unexpected properties!
 		}
 
 		return DeserializeResult.fromValueWithError(result, ...errors);

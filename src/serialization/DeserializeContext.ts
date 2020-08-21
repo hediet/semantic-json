@@ -1,13 +1,14 @@
 import { Namespace } from "../NamespacedNamed";
 
 export class DeserializeContext {
-	public static default = new DeserializeContext(undefined, true);
+	public static default = new DeserializeContext(undefined, true, true);
 
 	private readonly namespaces = new Map<string, Namespace>();
 
 	private constructor(
 		public readonly parent: DeserializeContext | undefined,
-		public readonly firstDeserializationOnValue: boolean = true
+		public readonly firstDeserializationOnValue: boolean,
+		public readonly reportUnexpectedPropertiesAsError: boolean
 	) {}
 
 	public hasPrefixes(): boolean {
@@ -19,7 +20,8 @@ export class DeserializeContext {
 	): DeserializeContext {
 		const c = new DeserializeContext(
 			this,
-			this.firstDeserializationOnValue
+			this.firstDeserializationOnValue,
+			this.reportUnexpectedPropertiesAsError
 		);
 		for (const [prefix, ns] of Object.entries(prefixes)) {
 			c.namespaces.set(prefix, ns);
@@ -27,11 +29,32 @@ export class DeserializeContext {
 		return c;
 	}
 
+	private _withReportUnexpectedPropertiesAsError(
+		val: boolean
+	): DeserializeContext {
+		if (this.reportUnexpectedPropertiesAsError === val) {
+			return this;
+		}
+		return new DeserializeContext(
+			this,
+			this.firstDeserializationOnValue,
+			val
+		);
+	}
+
+	public withoutReportUnexpectedPropertiesAsError(): DeserializeContext {
+		return this._withReportUnexpectedPropertiesAsError(true);
+	}
+
 	private _withFirstDeserializationOnValue(val: boolean): DeserializeContext {
 		if (this.firstDeserializationOnValue === val) {
 			return this;
 		}
-		return new DeserializeContext(this, val);
+		return new DeserializeContext(
+			this,
+			val,
+			this.reportUnexpectedPropertiesAsError
+		);
 	}
 
 	public withFirstDeserializationOnValue(): DeserializeContext {

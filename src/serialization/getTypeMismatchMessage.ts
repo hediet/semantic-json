@@ -51,7 +51,7 @@ export function getType(value: unknown): keyof Types {
 		type === "undefined" ||
 		type === "symbol"
 	) {
-		throw new Error("");
+		throw new Error(`Got value of unexpected type "${value}".`);
 	}
 	return type;
 }

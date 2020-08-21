@@ -84,6 +84,21 @@ describe("sObject", () => {
 			});
 		});
 
+		it("Unexpected Property In Open Object", () => {
+			const result = deserializeJson(serializer.opened(), {
+				requiredStr: "test",
+				requiredBool: true,
+				unexpectedProp: "unexpected",
+			});
+			deepEqual(result.errors, []);
+			deepEqual(result.value, {
+				requiredStr: "test",
+				requiredBool: true,
+				strWithDefaultValue: "myDefault",
+				unexpectedProp: "unexpected",
+			});
+		});
+
 		it("Error in property", () => {
 			const result = deserializeJson(serializer, {
 				requiredStr: "test",
@@ -98,6 +113,7 @@ describe("sObject", () => {
 			]);
 			deepEqual(result.value, {
 				requiredStr: "test",
+				requiredBool: undefined,
 				strWithDefaultValue: "myDefault",
 			});
 		});

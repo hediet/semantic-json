@@ -3,6 +3,7 @@ import { Serializer } from "../Serializer";
 import {
 	DeserializeResult,
 	DeserializeResultBuilder,
+	DeserializeError,
 } from "../DeserializeResult";
 import { JSONValue } from "../../JSONValue";
 import { DeserializeContext } from "../DeserializeContext";
@@ -34,17 +35,23 @@ export abstract class DelegatingSerializerImpl<
 		source: DeserializeResult<TIntermediate>,
 		context: DeserializeContext
 	): DeserializeResult<T> {
-		const b = new DeserializeResultBuilder<T>();
-		b.addError(...source.errors);
+		const errors = [...source.errors];
+		let hasValue = false;
+		let value: T | undefined = undefined;
 		if (source.hasValue) {
 			const result = this.refineIntermediate(source.value, context);
 			if (result.hasValue) {
-				b.setValue(result.value);
+				hasValue = true;
+				value = result.value;
 			}
-			b.addError(...result.errors);
+			errors.push(...result.errors);
 		}
-		b.addParticipatedClosedObjects(source.participatedClosedObjects);
-		return b.build();
+		return new DeserializeResult(
+			hasValue,
+			value,
+			errors,
+			source.unprocessedPropertyTree
+		);
 	}
 
 	protected internalDeserialize(

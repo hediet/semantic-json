@@ -4,29 +4,29 @@ import { NamespacedName } from "../../src/NamespacedNamed";
 
 describe("schema", () => {
 	it("Test1", () => {
-		const result = sTypePackage.deserialize({
-			$ns: {
-				m: "myPkg",
-			},
-			packageId: "myPkg",
-			schemaDefinitions: {
-				ContactBook: {
-					kind: "array",
-					of: "m#Contact",
+		const pkg = sTypePackage
+			.deserialize({
+				$ns: {
+					m: "myPkg",
 				},
-				Contact: {
-					kind: "object",
-					properties: {
-						firstname: { schema: { kind: "string" } },
-						lastname: { schema: { kind: "string" } },
+				packageId: "myPkg",
+				schemaDefinitions: {
+					ContactBook: {
+						kind: "array",
+						of: "m#Contact",
+					},
+					Contact: {
+						kind: "object",
+						properties: {
+							firstname: { schema: { kind: "string" } },
+							lastname: { schema: { kind: "string" } },
+						},
 					},
 				},
-			},
-		});
+			})
+			.getValidValue();
 
 		const serializerSystem = new SerializerSystem();
-
-		const pkg = result.value;
 		pkg.addToSerializerSystem(serializerSystem);
 		// TODO test refercening non existing definitions
 

@@ -1,7 +1,5 @@
 import { BaseSerializerImpl } from "../BaseSerializer";
 import {
-	ObjectSerializerImpl,
-	ObjectPropInfo,
 	ObjectSerializerProperty,
 	sProp,
 	sObject,
@@ -9,9 +7,13 @@ import {
 import { Serializer, SerializerOfKind } from "../Serializer";
 import { JSONValue } from "../../JSONValue";
 import { DeserializeContext } from "../DeserializeContext";
-import { DeserializeResult, DeserializeError } from "../DeserializeResult";
+import {
+	DeserializeResult,
+	DeserializeError,
+	UnexpectedPropertyTree,
+} from "../DeserializeResult";
 import { SerializeContext } from "../SerializeContext";
-import { sUnionMany, sIntersectionMany } from "../facade";
+import { sIntersectionMany } from "../facade";
 
 export interface IntersectionSerializer {
 	kind: "intersection";
@@ -38,9 +40,7 @@ export class IntersectionSerializerImpl<T extends unknown[]>
 		const innerContext = context.withoutFirstDeserializationOnValue();
 		const errors = new Array<DeserializeError>();
 		const result = new Array<any>();
-		const participatedClosedObjects = new Array<
-			ObjectSerializerImpl<any>
-		>();
+		let unexpectedPropertyTree: UnexpectedPropertyTree | undefined;
 
 		for (const s of this.intersectedSerializers) {
 			const r = s.deserialize(source, innerContext);
@@ -48,14 +48,22 @@ export class IntersectionSerializerImpl<T extends unknown[]>
 				errors.push(...r.errors);
 			}
 			result.push(r.hasValue ? r.value : undefined);
-			participatedClosedObjects.push(...r.participatedClosedObjects);
+			if (r.unprocessedPropertyTree) {
+				if (unexpectedPropertyTree) {
+					unexpectedPropertyTree = unexpectedPropertyTree.merge(
+						r.unprocessedPropertyTree
+					);
+				} else {
+					unexpectedPropertyTree = r.unprocessedPropertyTree;
+				}
+			}
 		}
 
 		return new DeserializeResult(
 			true,
 			result as any,
 			errors,
-			participatedClosedObjects
+			unexpectedPropertyTree
 		);
 	}
 
@@ -83,7 +91,7 @@ export type UnionToIntersection<U> = (
 	: never;
 
 // fuse?
-export function buildObjectSerializer(
+function buildObjectSerializer(
 	intersectedSerializers: readonly Serializer<any>[]
 ): Serializer<any> {
 	const objectTypes = intersectedSerializers

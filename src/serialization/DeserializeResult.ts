@@ -1,8 +1,6 @@
-import { ObjectSerializerImpl } from "./serializers";
-
 export class DeserializeResult<T> {
 	static fromValue<T>(value: T): DeserializeResult<T> {
-		return new DeserializeResult(true, value, [], []);
+		return new DeserializeResult(true, value, [], undefined);
 	}
 
 	public static fromError(
@@ -12,7 +10,7 @@ export class DeserializeResult<T> {
 			false,
 			undefined,
 			errorLike.map((e) => DeserializeError.from(e)),
-			[]
+			undefined
 		);
 	}
 
@@ -24,7 +22,7 @@ export class DeserializeResult<T> {
 			true,
 			value,
 			errorLike.map((e) => DeserializeError.from(e)),
-			[]
+			undefined
 		);
 	}
 
@@ -34,7 +32,9 @@ export class DeserializeResult<T> {
 		public readonly hasValue: boolean,
 		value: T | undefined,
 		public readonly errors: readonly DeserializeError[],
-		public readonly participatedClosedObjects: ObjectSerializerImpl<any>[]
+		public readonly unprocessedPropertyTree:
+			| UnexpectedPropertyTree
+			| undefined
 	) {
 		this.value = value!;
 	}
@@ -65,15 +65,6 @@ export class DeserializeResultBuilder<T> {
 		this.value = value;
 	}
 
-	public readonly participatedClosedObjects = new Array<
-		ObjectSerializerImpl<any>
-	>();
-	public addParticipatedClosedObjects(
-		objects: ObjectSerializerImpl<any>[]
-	): void {
-		this.participatedClosedObjects.push(...objects);
-	}
-
 	public addError(...errors: DeserializeErrorLike[]): void {
 		this.errors.push(...errors.map((e) => DeserializeError.from(e)));
 	}
@@ -83,7 +74,7 @@ export class DeserializeResultBuilder<T> {
 			this.hasValue,
 			this.value,
 			this.errors,
-			this.participatedClosedObjects
+			undefined
 		);
 	}
 }
@@ -122,4 +113,18 @@ export class DeserializeError {
 export interface DeserializeErrorAlternative {
 	alternativeId: string;
 	errors: readonly DeserializeError[];
+}
+
+export class UnexpectedPropertyTree {
+	constructor(
+		public readonly properties: Record<string, UnexpectedPropertyTree>,
+		public readonly unprocessedProperties: Set<string>
+	) {}
+
+	public merge(
+		other: UnexpectedPropertyTree
+	): UnexpectedPropertyTree | undefined {
+		// TODO
+		return undefined;
+	}
 }
