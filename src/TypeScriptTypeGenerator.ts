@@ -1,19 +1,42 @@
-import { BaseSerializer, Serializer, NamedSerializer } from "./serialization";
+import { Serializer, NamedSerializer } from "./serialization";
+
+export class TypeScriptDefinition {
+	public get definingType(): string {
+		return this._definingType.value;
+	}
+
+	constructor(
+		public readonly name: string,
+		private readonly _definingType: { value: string }
+	) {}
+
+	public getDefinitionSource(options: { exported: boolean }): string {
+		const exportStr = options.exported ? "export " : "";
+		return `${exportStr}type ${this.name} = ${this.definingType};`;
+	}
+}
 
 export class TypeScriptTypeGenerator {
-	private readonly definitions = new Map<
+	private readonly _definitions = new Map<
 		NamedSerializer<any>,
-		{ name: string; definition: string }
+		TypeScriptDefinition
 	>();
 
-	public getDefinitionSource(): string {
-		return [...this.definitions.values()]
-			.map((d) => d.definition)
+	public readonly definitions: ReadonlyMap<
+		NamedSerializer<any>,
+		TypeScriptDefinition
+	> = this._definitions;
+
+	public getDefinitionSource(
+		options: { exported: boolean } = { exported: false }
+	): string {
+		return [...this._definitions.values()]
+			.map((d) => d.getDefinitionSource(options))
 			.join("\n\n");
 	}
 
 	public getOrAddDef(s: NamedSerializer<any>): string {
-		const existing = this.definitions.get(s);
+		const existing = this._definitions.get(s);
 		if (existing) {
 			return existing.name;
 		}
@@ -25,14 +48,12 @@ export class TypeScriptTypeGenerator {
 			return str[0].toUpperCase() + str.substr(1);
 		}
 
-		const def = {
-			name: capitalize(s.name.name),
-			definition: undefined! as string,
+		const defVal = {
+			value: undefined! as string,
 		};
-		this.definitions.set(s, def);
-		def.definition = `type ${def.name} = ${this.getType(
-			s.underlyingSerializer
-		)};`;
+		const def = new TypeScriptDefinition(capitalize(s.name.name), defVal);
+		this._definitions.set(s, def);
+		defVal.value = `${this.getType(s.underlyingSerializer)}`;
 
 		return def.name;
 	}

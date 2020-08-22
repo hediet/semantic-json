@@ -1,6 +1,6 @@
 {
 	"name": "@hediet/semantic-json",
-	"version": "0.3.12",
+	"version": "0.3.14",
 	"description": "Highly experimental. Do not use yet.",
 	"scripts": {
 		"dev": "tsc --watch",
