@@ -173,6 +173,7 @@ export type Refinement<T, TIntermediate> =
 				value: TIntermediate,
 				context: DeserializeContext
 			) => DeserializeResult<T> | T;
+			// TODO: fromInvalidIntermediate?
 			toIntermediate: (
 				value: T,
 				context: SerializeContext
@@ -185,6 +186,7 @@ export type Refinement<T, TIntermediate> =
 				value: TIntermediate,
 				context: DeserializeContext
 			) => DeserializeResult<T> | T;
+			// TODO: fromInvalidIntermediate?
 			toIntermediate: (
 				value: T,
 				context: SerializeContext

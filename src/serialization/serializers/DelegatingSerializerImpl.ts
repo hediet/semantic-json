@@ -38,7 +38,7 @@ export abstract class DelegatingSerializerImpl<
 		const errors = [...source.errors];
 		let hasValue = false;
 		let value: T | undefined = undefined;
-		if (source.hasValue) {
+		if (!source.hasErrors) {
 			const result = this.refineIntermediate(source.value, context);
 			if (result.hasValue) {
 				hasValue = true;
@@ -46,6 +46,7 @@ export abstract class DelegatingSerializerImpl<
 			}
 			errors.push(...result.errors);
 		}
+		// TODO if source.hasValue try refineInvalidIntermediate!
 		return new DeserializeResult(
 			hasValue,
 			value,
