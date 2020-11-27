@@ -7,7 +7,7 @@ export class DeserializeContext {
 
 	private constructor(
 		public readonly parent: DeserializeContext | undefined,
-		public readonly firstDeserializationOnValue: boolean,
+		public readonly firstDeserializationAttemptOfValue: boolean,
 		public readonly reportUnexpectedPropertiesAsError: boolean
 	) {}
 
@@ -20,7 +20,7 @@ export class DeserializeContext {
 	): DeserializeContext {
 		const c = new DeserializeContext(
 			this,
-			this.firstDeserializationOnValue,
+			this.firstDeserializationAttemptOfValue,
 			this.reportUnexpectedPropertiesAsError
 		);
 		for (const [prefix, ns] of Object.entries(prefixes)) {
@@ -37,17 +37,17 @@ export class DeserializeContext {
 		}
 		return new DeserializeContext(
 			this,
-			this.firstDeserializationOnValue,
+			this.firstDeserializationAttemptOfValue,
 			val
 		);
 	}
 
 	public withoutReportUnexpectedPropertiesAsError(): DeserializeContext {
-		return this._withReportUnexpectedPropertiesAsError(true);
+		return this._withReportUnexpectedPropertiesAsError(false);
 	}
 
 	private _withFirstDeserializationOnValue(val: boolean): DeserializeContext {
-		if (this.firstDeserializationOnValue === val) {
+		if (this.firstDeserializationAttemptOfValue === val) {
 			return this;
 		}
 		return new DeserializeContext(

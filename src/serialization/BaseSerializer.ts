@@ -44,7 +44,18 @@ export abstract class BaseSerializer<T> {
 		let childContext = context.withoutReportUnexpectedPropertiesAsError();
 
 		if (typeof source === "object" && source !== null) {
-			if ("$ns" in source && childContext.firstDeserializationOnValue) {
+			if (
+				childContext.firstDeserializationAttemptOfValue &&
+				"$ignoreUnexpectedProperties" in source &&
+				source["$ignoreUnexpectedProperties"] === true
+			) {
+				context = context.withoutReportUnexpectedPropertiesAsError();
+			}
+
+			if (
+				"$ns" in source &&
+				childContext.firstDeserializationAttemptOfValue
+			) {
 				const ns = source["$ns"] as object;
 
 				childContext = childContext.withPrefixes(
@@ -65,7 +76,7 @@ export abstract class BaseSerializer<T> {
 
 		let r = this.internalDeserialize(source, childContext);
 
-		if (childContext.reportUnexpectedPropertiesAsError) {
+		if (context.reportUnexpectedPropertiesAsError) {
 			const errors = [...r.errors];
 			const processPropertyTree = (
 				path: (number | string)[],
@@ -171,9 +182,10 @@ export abstract class BaseSerializer<T> {
 	public abstract toSchema(serializerSystem: SerializerSystem): SchemaDef;
 }
 
-export abstract class BaseSerializerImpl<T, TInterface> extends BaseSerializer<
-	T
-> {
+export abstract class BaseSerializerImpl<
+	T,
+	TInterface
+> extends BaseSerializer<T> {
 	public get TInterface(): TInterface {
 		throw new Error("Only For Runtime");
 	}
