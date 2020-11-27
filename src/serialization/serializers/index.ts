@@ -22,3 +22,7 @@ export { LazySerializerImpl } from "./LazySerializerImpl";
 export { ArraySerializerImpl } from "./ArraySerializerImpl";
 export { ObjectSerializerImpl } from "./ObjectSerializerImpl";
 export { MapSerializerImpl } from "./MapSerializerImpl";
+
+export { StringSerializerImpl } from "./StringSerializerImpl";
+export { BooleanSerializerImpl } from "./BooleanSerializerImpl";
+export { NumberSerializerImpl } from "./NumberSerializerImpl";

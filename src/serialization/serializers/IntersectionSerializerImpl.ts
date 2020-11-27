@@ -1,7 +1,7 @@
 import { BaseSerializerImpl } from "../BaseSerializer";
 import {
 	ObjectSerializerProperty,
-	sProp,
+	prop,
 	sObject,
 } from "./ObjectSerializerImpl";
 import { Serializer, SerializerOfKind } from "../Serializer";
@@ -14,6 +14,8 @@ import {
 } from "../DeserializeResult";
 import { SerializeContext } from "../SerializeContext";
 import { sIntersectionMany } from "../facade";
+import { IntersectionSchemaDef, SchemaDef } from "../../schema/schemaDefs";
+import { SerializerSystem } from "../SerializerSystem";
 
 export interface IntersectionSerializer {
 	kind: "intersection";
@@ -80,6 +82,12 @@ export class IntersectionSerializerImpl<T extends unknown[]>
 			...value.map((val, idx) =>
 				this.intersectedSerializers[idx].serialize(val)
 			)
+		);
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return new IntersectionSchemaDef(
+			this.intersectedSerializers.map((s) => s.toSchema(serializerSystem))
 		);
 	}
 }

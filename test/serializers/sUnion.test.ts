@@ -92,6 +92,16 @@ describe("sUnion", () => {
 			deepEqual(result.value.toString(), "2:myString");
 		});
 
+		/*
+		All alternatives failed to deserialize the value:
+			In "/": Required property "t1Prop" is missing.
+		Or
+			in "/tag": Expected "tag4", "tag5" or "tag6", but got "tag1".
+		Or
+			in "/": Expected a value of type "string" or "number", but got a value of type "object".
+				
+		*/
+
 		it("tag2 error", () => {
 			const result = deserializeJson(serializer, { tag: "tag1" });
 			deepEqual(result.errors, [

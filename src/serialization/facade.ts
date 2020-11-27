@@ -7,6 +7,9 @@ import {
 	AnySerializerImpl,
 	MapSerializerImpl,
 	LazySerializerImpl,
+	StringSerializerImpl,
+	NumberSerializerImpl,
+	BooleanSerializerImpl,
 } from "./serializers";
 import { LiteralType } from "./serializers/LiteralSerializerImpl";
 import { BaseSerializer } from "./BaseSerializer";
@@ -15,29 +18,41 @@ import { Serializer, NamedSerializer } from "./Serializer";
 import { DeserializeResult } from "./DeserializeResult";
 import { UnionToIntersection } from "./serializers/IntersectionSerializerImpl";
 import { UnionProcessingStrategy } from "./serializers/UnionSerializerImpl";
+import { NumberSerializerOptions } from "./serializers/NumberSerializerImpl";
+import { StringSerializerOptions } from "./serializers/StringSerializerImpl";
+import { ArraySerializeOptions } from "./serializers/ArraySerializerImpl";
 
 export {
 	sObject,
 	sOpenObject,
-	sProp,
-	sOptionalProp,
+	prop,
+	optionalProp,
 	ObjectPropInfo,
 } from "./serializers/ObjectSerializerImpl";
 
 export function sAny(): AnySerializerImpl["TSerializer"] {
 	return new AnySerializerImpl();
 }
-
-export function sString(): PrimitiveSerializerImpl<"string">["TSerializer"] {
-	return new PrimitiveSerializerImpl("string");
+export function sString(
+	options: StringSerializerOptions = {}
+): StringSerializerImpl["TSerializer"] {
+	return new StringSerializerImpl(options);
 }
 
-export function sNumber(): PrimitiveSerializerImpl<"number">["TSerializer"] {
-	return new PrimitiveSerializerImpl("number");
+export function sNumber(
+	options: NumberSerializerOptions = {}
+): NumberSerializerImpl["TSerializer"] {
+	return new NumberSerializerImpl(options);
 }
 
-export function sBoolean(): PrimitiveSerializerImpl<"boolean">["TSerializer"] {
-	return new PrimitiveSerializerImpl("boolean");
+export function sInteger(
+	options: Omit<NumberSerializerOptions, "integer"> = {}
+): NumberSerializerImpl["TSerializer"] {
+	return new NumberSerializerImpl({ ...options, integer: true });
+}
+
+export function sBoolean(): BooleanSerializerImpl["TSerializer"] {
+	return new BooleanSerializerImpl();
 }
 
 export function sNull(): LiteralSerializerImpl<null>["TSerializer"] {
@@ -104,14 +119,11 @@ function sRegEx(): Serializer<RegExp> {
 	throw "";
 }
 
-function sInteger(): Serializer<number> {
-	throw "";
-}
-
 export function sArrayOf<T>(
-	itemSerializer: Serializer<T>
+	itemSerializer: Serializer<T>,
+	options: ArraySerializeOptions = {}
 ): ArraySerializerImpl<T>["TSerializer"] {
-	return new ArraySerializerImpl<any>(itemSerializer);
+	return new ArraySerializerImpl<any>(itemSerializer, options);
 }
 
 function sTuple() {}

@@ -7,11 +7,12 @@ import {
 } from "./DelegatingSerializerImpl";
 import { SerializeContext } from "../SerializeContext";
 import { JSONValue } from "../..";
+import { SerializerSystem } from "../SerializerSystem";
+import { SchemaDef, SchemaRefDef } from "../../schema/schemaDefs";
 
 export interface NamedSerializer extends DelegatingSerializer {
 	delegationKind: "named";
 	name: NamespacedName;
-	isDefinition: boolean;
 }
 
 export class NamedSerializerImpl<T = any>
@@ -29,8 +30,7 @@ export class NamedSerializerImpl<T = any>
 
 	constructor(
 		underlyingSerializer: Serializer<T> | undefined,
-		public readonly name: NamespacedName,
-		public readonly isDefinition: boolean
+		public readonly name: NamespacedName
 	) {
 		super();
 
@@ -62,5 +62,15 @@ export class NamedSerializerImpl<T = any>
 		context: SerializeContext
 	): JSONValue {
 		return this.underlyingSerializer.serialize(value, context);
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		if (!serializerSystem.isSerializerKnown(this.name)) {
+			serializerSystem.defineSerializer(
+				this.name,
+				this.underlyingSerializer
+			);
+		}
+		return new SchemaRefDef(this.name);
 	}
 }

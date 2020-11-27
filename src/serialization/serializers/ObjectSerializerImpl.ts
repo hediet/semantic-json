@@ -12,6 +12,14 @@ import {
 	isValueOfType,
 	getTypeMismatchMessage,
 } from "../getTypeMismatchMessage";
+import { SerializerSystem } from "../SerializerSystem";
+import {
+	SchemaDef,
+	IntersectionSchemaDef,
+	ObjectSchemaDef,
+	ObjectPropertyDef,
+} from "../../schema/schemaDefs";
+import { fromEntries } from "../../utils";
 
 export interface ObjectSerializer {
 	kind: "object";
@@ -166,6 +174,17 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 	public opened(): this {
 		return new ObjectSerializerImpl(this.properties, true) as any;
 	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return new ObjectSchemaDef(
+			fromEntries(
+				this.propertiesList.map((p) => [
+					p.name,
+					p.toSchema(serializerSystem),
+				])
+			)
+		);
+	}
 }
 
 export type ObjectPropertyKind =
@@ -200,6 +219,17 @@ export class ObjectSerializerProperty<
 			this.description,
 			this.isOptional,
 			this.defaultValue
+		);
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): ObjectPropertyDef {
+		const defaultValue = this.defaultValue
+			? this.serializer.serialize(this.defaultValue.value)
+			: undefined;
+		return new ObjectPropertyDef(
+			this.serializer.toSchema(serializerSystem),
+			this.isOptional,
+			defaultValue
 		);
 	}
 }
@@ -260,7 +290,7 @@ function normalizeProperties<T extends ObjectSerializerPropertiesOptions>(
 	return normalizedProps;
 }
 
-export function sOptionalProp<TType>(
+export function optionalProp<TType>(
 	serializer: Serializer<TType>,
 	objectPropInfo: ObjectPropInfo = {}
 ): ObjectSerializerProperty<TType, "optional"> {
@@ -273,23 +303,23 @@ export function sOptionalProp<TType>(
 	);
 }
 
-export function sProp<TType>(
+export function prop<TType>(
 	serializer: Serializer<TType>,
 	objectPropInfo: ObjectPropInfo & {
 		optional: { withDefault: TType };
 	}
 ): ObjectSerializerProperty<TType, "optionalWithDefault">;
-export function sProp<TType>(
+export function prop<TType>(
 	serializer: Serializer<TType>,
 	objectPropInfo: ObjectPropInfo & { optional: true }
 ): ObjectSerializerProperty<TType, "optional">;
-export function sProp<TType>(
+export function prop<TType>(
 	serializer: Serializer<TType>,
 	objectPropInfo: ObjectPropInfo & {
 		optional?: boolean | { withDefault: TType };
 	}
 ): ObjectSerializerProperty<TType, "ordinary">;
-export function sProp(
+export function prop(
 	serializer: Serializer<any>,
 	objectPropInfo: ObjectPropInfo & {
 		optional?: boolean | { withDefault: any };

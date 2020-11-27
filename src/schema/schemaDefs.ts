@@ -12,7 +12,7 @@ import {
 	sLiteral,
 	sNull,
 	sObject,
-	sProp,
+	prop,
 	sArrayOf,
 	sAny,
 	sMap,
@@ -33,7 +33,9 @@ export class SchemaPackageDef {
 		return s;
 	}
 
-	public addToSerializerSystem(serializerSystem: SerializerSystem): void {
+	public addToSerializerSystem(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): void {
 		for (const [defName, def] of Object.entries(this.definitions)) {
 			const name = this.packageNs(defName);
 			const serializer = def.toSerializer(serializerSystem);
@@ -45,7 +47,7 @@ export class SchemaPackageDef {
 type GenericSerializer = Serializer<AnnotatedJSON>;
 
 export type AnnotatedJSON =
-	| SpecificAnnotatedJSON
+	| ValueAnnotatedJSON
 	| ObjectAnnotatedJSON
 	| ArrayAnnotatedJSON
 	| AbstractAnnotatedJSON
@@ -54,8 +56,8 @@ export type AnnotatedJSON =
 
 abstract class SerializationResultBase {}
 
-export class SpecificAnnotatedJSON extends SerializationResultBase {
-	public readonly kind = "specific";
+export class ValueAnnotatedJSON extends SerializationResultBase {
+	public readonly kind = "value";
 	constructor(
 		public readonly type: SerializerOfKind<"primitive" | "literal", any>,
 		public readonly value: string | boolean | number | null
@@ -129,16 +131,16 @@ export type SchemaDef =
 	| ObjectSchemaDef
 	| MapSchemaDef
 	| ArraySchemaDef
-	| TypeRefDef;
+	| SchemaRefDef;
 
 export abstract class BaseSchemaDef {
 	public abstract collectUsedNamespaces(set: Set<string>): void;
 	public abstract toSerializer(
-		serializerSystem: SerializerSystem
+		serializerSystem: SerializerSystem<AnnotatedJSON>
 	): GenericSerializer;
 }
 
-export class TypeRefDef extends BaseSchemaDef {
+export class SchemaRefDef extends BaseSchemaDef {
 	constructor(public readonly namespacedName: NamespacedName) {
 		super();
 	}
@@ -147,8 +149,10 @@ export class TypeRefDef extends BaseSchemaDef {
 		set.add(this.namespacedName.namespace);
 	}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
-		return serializerSystem.getOrInitializeEmptySerializer(
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
+		return serializerSystem.getSerializerOrCreateUninitialized(
 			this.namespacedName
 		); // TODO refine
 	}
@@ -166,7 +170,9 @@ export class UnionSchemaDef extends BaseSchemaDef {
 		}
 	}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sUnionMany(
 			this.of.map((t) => t.toSerializer(serializerSystem)),
 			{ processingStrategy: "all" }
@@ -192,7 +198,9 @@ export class IntersectionSchemaDef extends BaseSchemaDef {
 		}
 	}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		throw new Error("Not implemented");
 		/*return sIntersectionMany(
 			this.of.map((t) => t.toSerializer(serializerSystem))
@@ -209,11 +217,13 @@ export class StringSchemaDef extends BaseSchemaDef {
 
 	public collectUsedNamespaces(set: Set<string>): void {}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sString();
 		return base.refine<AnnotatedJSON>({
-			class: SpecificAnnotatedJSON,
-			fromIntermediate: (s) => new SpecificAnnotatedJSON(base, s),
+			class: ValueAnnotatedJSON,
+			fromIntermediate: (s) => new ValueAnnotatedJSON(base, s),
 			toIntermediate: notSupported,
 		});
 	}
@@ -222,13 +232,31 @@ export class StringSchemaDef extends BaseSchemaDef {
 export class NumberSchemaDef extends BaseSchemaDef {
 	public readonly kind = "number";
 
+	constructor(
+		public readonly integer?: boolean,
+		public readonly lowerBound?: number,
+		public readonly lowerBoundExclusive?: boolean,
+		public readonly upperBound?: number,
+		public readonly upperBoundExclusive?: boolean
+	) {
+		super();
+	}
+
 	public collectUsedNamespaces(set: Set<string>): void {}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
-		const base = sNumber();
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
+		const base = sNumber({
+			integer: this.integer,
+			lowerBound: this.lowerBound,
+			lowerBoundExclusive: this.lowerBoundExclusive,
+			upperBound: this.upperBound,
+			upperBoundExclusive: this.upperBoundExclusive,
+		});
 		return base.refine<AnnotatedJSON>({
-			class: SpecificAnnotatedJSON,
-			fromIntermediate: (s) => new SpecificAnnotatedJSON(base, s),
+			class: ValueAnnotatedJSON,
+			fromIntermediate: (s) => new ValueAnnotatedJSON(base, s),
 			toIntermediate: notSupported,
 		});
 	}
@@ -239,11 +267,13 @@ export class BooleanSchemaDef extends BaseSchemaDef {
 
 	public collectUsedNamespaces(set: Set<string>): void {}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sBoolean();
 		return base.refine<AnnotatedJSON>({
-			class: SpecificAnnotatedJSON,
-			fromIntermediate: (s) => new SpecificAnnotatedJSON(base, s),
+			class: ValueAnnotatedJSON,
+			fromIntermediate: (s) => new ValueAnnotatedJSON(base, s),
 			toIntermediate: notSupported,
 		});
 	}
@@ -254,7 +284,9 @@ export class AnySchemaDef extends BaseSchemaDef {
 
 	public collectUsedNamespaces(set: Set<string>): void {}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sAny();
 		return base.refine<AnnotatedJSON>({
 			class: AnyAnnotatedJSON,
@@ -273,11 +305,13 @@ export class LiteralSchemaDef extends BaseSchemaDef {
 
 	public collectUsedNamespaces(set: Set<string>): void {}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sLiteral(this.value);
 		return base.refine<AnnotatedJSON>({
-			class: SpecificAnnotatedJSON,
-			fromIntermediate: (s) => new SpecificAnnotatedJSON(base, s),
+			class: ValueAnnotatedJSON,
+			fromIntermediate: (s) => new ValueAnnotatedJSON(base, s),
 			toIntermediate: notSupported,
 		});
 	}
@@ -288,11 +322,13 @@ export class NullSchemaDef extends BaseSchemaDef {
 
 	public collectUsedNamespaces(set: Set<string>): void {}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sNull();
 		return base.refine<AnnotatedJSON>({
-			class: SpecificAnnotatedJSON,
-			fromIntermediate: (s) => new SpecificAnnotatedJSON(base, s),
+			class: ValueAnnotatedJSON,
+			fromIntermediate: (s) => new ValueAnnotatedJSON(base, s),
 			toIntermediate: notSupported,
 		});
 	}
@@ -311,13 +347,15 @@ export class ObjectSchemaDef extends BaseSchemaDef {
 		}
 	}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sObject(
 			fromEntries(
 				Object.entries(this.properties).map(
 					([propertyName, propertyInfo]) => [
 						propertyName,
-						sProp(
+						prop(
 							propertyInfo.schema.toSerializer(serializerSystem),
 							{
 								optional: propertyInfo.optional,
@@ -348,7 +386,11 @@ export class ObjectPropertyDef {
 export class ArraySchemaDef extends BaseSchemaDef {
 	public readonly kind = "array";
 
-	constructor(public readonly itemSchema: SchemaDef) {
+	constructor(
+		public readonly itemSchema: SchemaDef,
+		public readonly minLength: number | undefined,
+		public readonly maxLength: number | undefined
+	) {
 		super();
 	}
 
@@ -356,7 +398,9 @@ export class ArraySchemaDef extends BaseSchemaDef {
 		this.itemSchema.collectUsedNamespaces(set);
 	}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sArrayOf(this.itemSchema.toSerializer(serializerSystem));
 		return base.refine<AnnotatedJSON>({
 			class: ArrayAnnotatedJSON,
@@ -387,7 +431,7 @@ export class TupleSchemaDef extends BaseSchemaDef {
 		}
 	}
 
-	public toSerializer(serializerSystem: SerializerSystem): SerializeT {}
+	public toSerializer(serializerSystem: SerializerSystem<AnnotatedJSON>): SerializeT {}
 }
 
 export class TupleEntryDef {
@@ -412,7 +456,9 @@ export class MapSchemaDef extends BaseSchemaDef {
 		this.valueType.collectUsedNamespaces(set);
 	}
 
-	public toSerializer(serializerSystem: SerializerSystem): GenericSerializer {
+	public toSerializer(
+		serializerSystem: SerializerSystem<AnnotatedJSON>
+	): GenericSerializer {
 		const base = sMap(this.valueType.toSerializer(serializerSystem));
 
 		return base.refine<AnnotatedJSON>({

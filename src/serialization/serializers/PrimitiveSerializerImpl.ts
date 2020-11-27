@@ -11,24 +11,27 @@ export type Primitives = {
 	boolean: boolean;
 };
 
-export interface PrimitiveSerializer {
+export interface PrimitiveSerializer<TPrimitiveName = keyof Primitives> {
 	kind: "primitive";
-	primitive: keyof Primitives;
+	primitive: TPrimitiveName;
 }
 
-export class PrimitiveSerializerImpl<T extends keyof Primitives>
-	extends BaseSerializerImpl<Primitives[T], PrimitiveSerializer>
+export abstract class PrimitiveSerializerImpl<
+		TPrimitiveName extends keyof Primitives,
+		TInterface extends PrimitiveSerializer<TPrimitiveName>
+	>
+	extends BaseSerializerImpl<Primitives[TPrimitiveName], TInterface>
 	implements PrimitiveSerializer {
 	public readonly kind = "primitive";
 
-	constructor(public readonly primitive: T) {
+	constructor(public readonly primitive: TPrimitiveName) {
 		super();
 	}
 
 	protected internalDeserialize(
 		source: JSONValue,
 		context: DeserializeContext
-	): DeserializeResult<Primitives[T]> {
+	): DeserializeResult<Primitives[TPrimitiveName]> {
 		if (typeof source !== this.primitive) {
 			return DeserializeResult.fromError({
 				message: getTypeMismatchMessage(source, {
@@ -36,15 +39,22 @@ export class PrimitiveSerializerImpl<T extends keyof Primitives>
 				}),
 			});
 		}
-		return DeserializeResult.fromValue(source as any);
+		return this.internalDeserializePrimitive(source as any, context);
 	}
 
-	protected internalCanSerialize(value: unknown): value is Primitives[T] {
+	protected abstract internalDeserializePrimitive(
+		source: Primitives[TPrimitiveName],
+		context: DeserializeContext
+	): DeserializeResult<Primitives[TPrimitiveName]>;
+
+	protected internalCanSerialize(
+		value: unknown
+	): value is Primitives[TPrimitiveName] {
 		return typeof value === this.primitive;
 	}
 
 	protected internalSerialize(
-		value: Primitives[T],
+		value: Primitives[TPrimitiveName],
 		context: SerializeContext
 	): JSONValue {
 		return value;

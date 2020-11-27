@@ -1,13 +1,10 @@
 import {
-	sUnion,
 	sString,
-	sNumber,
-	sObject,
 	sLiteral,
 	sUnionMany,
 	sIntersect,
-} from "../src";
-import { sOpenObject } from "../src/serialization/serializers/ObjectSerializerImpl";
+	sOpenObject,
+} from "../../src";
 
 it("intersection debug visualizer", () => {
 	class Text {

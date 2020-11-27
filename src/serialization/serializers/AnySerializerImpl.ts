@@ -3,12 +3,15 @@ import { DeserializeResult } from "../DeserializeResult";
 import { DeserializeContext } from "../DeserializeContext";
 import { JSONValue } from "../../JSONValue";
 import { SerializeContext } from "../SerializeContext";
+import { SerializerSystem } from "../SerializerSystem";
+import { SchemaDef, AnySchemaDef } from "../../schema/schemaDefs";
 
 export interface AnySerializer {
 	kind: "any";
 }
 
-export class AnySerializerImpl extends BaseSerializerImpl<any, AnySerializer>
+export class AnySerializerImpl
+	extends BaseSerializerImpl<any, AnySerializer>
 	implements AnySerializer {
 	public readonly kind = "any";
 
@@ -28,5 +31,9 @@ export class AnySerializerImpl extends BaseSerializerImpl<any, AnySerializer>
 		context: SerializeContext
 	): JSONValue {
 		return value;
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return new AnySchemaDef();
 	}
 }

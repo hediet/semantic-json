@@ -8,6 +8,8 @@ import { DeserializeContext } from "../DeserializeContext";
 import { JSONValue } from "../..";
 import { SerializeContext } from "../SerializeContext";
 import { Refinement } from "../BaseSerializer";
+import { SerializerSystem } from "../SerializerSystem";
+import { SchemaDef } from "../../schema/schemaDefs";
 
 export interface RefinedSerializer extends DelegatingSerializer {
 	delegationKind: "refined";
@@ -74,5 +76,9 @@ export class RefinedSerializerImpl<T, TIntermediate>
 	): JSONValue {
 		const intermediate = this._toIntermediate(value, context);
 		return this.underlyingSerializer.serialize(intermediate, context);
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return this.underlyingSerializer.toSchema(serializerSystem);
 	}
 }

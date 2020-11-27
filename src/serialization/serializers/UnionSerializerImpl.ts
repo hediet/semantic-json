@@ -8,6 +8,8 @@ import {
 	DeserializeError,
 } from "../DeserializeResult";
 import { SerializeContext } from "../SerializeContext";
+import { UnionSchemaDef, SchemaDef } from "../../schema/schemaDefs";
+import { SerializerSystem } from "../SerializerSystem";
 
 export interface UnionSerializer {
 	kind: "union";
@@ -104,5 +106,11 @@ export class UnionSerializerImpl<T>
 		}
 
 		return Object.assign({}, ...results);
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return new UnionSchemaDef(
+			this.unitedSerializers.map((s) => s.toSchema(serializerSystem))
+		);
 	}
 }

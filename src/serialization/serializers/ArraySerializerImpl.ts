@@ -11,10 +11,23 @@ import {
 	isValueOfType,
 	getTypeMismatchMessage,
 } from "../getTypeMismatchMessage";
+import { SerializerSystem } from "../SerializerSystem";
+import {
+	SchemaDef,
+	AnySchemaDef,
+	ArraySchemaDef,
+} from "../../schema/schemaDefs";
 
 export interface ArraySerializer {
 	kind: "array";
 	itemSerializer: Serializer<any>;
+	minLength: number | undefined;
+	maxLength: number | undefined;
+}
+
+export interface ArraySerializeOptions {
+	minLength?: number;
+	maxLength?: number;
 }
 
 export class ArraySerializerImpl<TValue>
@@ -22,8 +35,17 @@ export class ArraySerializerImpl<TValue>
 	implements ArraySerializer {
 	public readonly kind = "array";
 
-	constructor(public readonly itemSerializer: Serializer<TValue>) {
+	public readonly minLength: number | undefined;
+	public readonly maxLength: number | undefined;
+
+	constructor(
+		public readonly itemSerializer: Serializer<TValue>,
+		options: ArraySerializeOptions
+	) {
 		super();
+
+		this.minLength = options.minLength;
+		this.maxLength = options.maxLength;
 	}
 
 	protected internalDeserialize(
@@ -79,5 +101,13 @@ export class ArraySerializerImpl<TValue>
 		context: SerializeContext
 	): JSONValue {
 		return value.map((v) => this.itemSerializer.serialize(v, context));
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return new ArraySchemaDef(
+			this.itemSerializer.toSchema(serializerSystem),
+			this.minLength,
+			this.maxLength
+		);
 	}
 }

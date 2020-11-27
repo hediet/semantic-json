@@ -2,7 +2,7 @@ import {
 	sLazy,
 	sObject,
 	sLiteral,
-	sProp,
+	prop,
 	sBoolean,
 	sMap,
 	sNamespacedName,
@@ -12,6 +12,7 @@ import {
 	sArrayOf,
 	Serializer,
 	NamedSerializer,
+	optionalProp,
 } from "../serialization";
 import {
 	UnionSchemaDef,
@@ -23,7 +24,7 @@ import {
 	ArraySchemaDef,
 	ObjectSchemaDef,
 	MapSchemaDef,
-	TypeRefDef,
+	SchemaRefDef,
 	SchemaPackageDef,
 	AnySchemaDef,
 	LiteralSchemaDef,
@@ -118,7 +119,7 @@ const sNullType = sObject({
 
 const sObjectProperty = sObject({
 	schema: typeRef,
-	optional: sProp(sBoolean(), {
+	optional: prop(sBoolean(), {
 		optional: { withDefault: false },
 	}),
 })
@@ -135,11 +136,14 @@ const sObjectProperty = sObject({
 
 const sArrayOfType = sObject({
 	kind: sLiteral("array"),
+	minLength: optionalProp(sNumber()),
+	maxLength: optionalProp(sNumber()),
 	of: typeRef,
 })
 	.refine<ArraySchemaDef>({
 		class: ArraySchemaDef,
-		fromIntermediate: (val) => new ArraySchemaDef(val.of),
+		fromIntermediate: (val) =>
+			new ArraySchemaDef(val.of, val.minLength, val.maxLength),
 		toIntermediate: (val) => ({ kind: val.kind, of: val.itemSchema }),
 	})
 	.defineAs(SchemaDefinitionNs("ArrayType"));
@@ -171,8 +175,8 @@ const sMapType = sObject({
 
 const sTypeRef = sNamespacedName()
 	.refine({
-		class: TypeRefDef,
-		fromIntermediate: (val) => new TypeRefDef(val),
+		class: SchemaRefDef,
+		fromIntermediate: (val) => new SchemaRefDef(val),
 		toIntermediate: (val) => val.namespacedName,
 	})
 	.defineAs(SchemaDefinitionNs("TypeReference"));

@@ -5,7 +5,7 @@ import {
 	sOpenObject,
 	sArrayOf,
 	sString,
-	sOptionalProp,
+	optionalProp,
 	sUnion,
 	sLiteral,
 	sBoolean,
@@ -24,7 +24,7 @@ describe("JsonSchemaGenerator", () => {
 				items: sArrayOf(
 					sOpenObject({
 						text: sString(),
-						emphasis: sOptionalProp(
+						emphasis: optionalProp(
 							sUnion(
 								[
 									sLiteral("style1"),
@@ -37,8 +37,8 @@ describe("JsonSchemaGenerator", () => {
 						),
 					})
 				),
-				segment: sOptionalProp(sString()),
-				isMarked: sOptionalProp(sBoolean()),
+				segment: optionalProp(sString()),
+				isMarked: optionalProp(sBoolean()),
 			}).defineAs(namespace("hediet.de/visualization")("node"))
 		);
 

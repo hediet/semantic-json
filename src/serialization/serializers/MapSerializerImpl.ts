@@ -8,6 +8,8 @@ import {
 	isValueOfType,
 } from "../getTypeMismatchMessage";
 import { Serializer } from "../Serializer";
+import { MapSchemaDef, SchemaDef } from "../../schema/schemaDefs";
+import { SerializerSystem } from "../SerializerSystem";
 
 export interface MapSerializer {
 	kind: "map";
@@ -64,5 +66,11 @@ export class MapSerializerImpl<TValue>
 			result[key] = this.valueSerializer.serialize(val, context);
 		}
 		return result;
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return new MapSchemaDef(
+			this.valueSerializer.toSchema(serializerSystem)
+		);
 	}
 }

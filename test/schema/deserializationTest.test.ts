@@ -1,6 +1,42 @@
-import { sString, sArrayOf, DeserializeResult, sTypePackage } from "../../src";
+import {
+	sString,
+	sArrayOf,
+	DeserializeResult,
+	sTypePackage,
+	NamedSerializer,
+	sObject,
+	DeserializeError,
+	Serializer,
+	BaseSerializer,
+} from "../../src";
 import { SerializerSystem } from "../../src/serialization/SerializerSystem";
-import { NamespacedName } from "../../src/NamespacedNamed";
+import { NamespacedName, namespace } from "../../src/NamespacedNamed";
+
+abstract class Constraint {
+	constructor() {
+		if ((this as any).constructor.serializer === undefined) {
+			throw new Error("Static `serializer` property must be set!");
+		}
+	}
+
+	public abstract validate(value: unknown): ReadonlyArray<DeserializeError>;
+}
+
+const defaultConstraintNs = namespace("hediet.de/constraints");
+
+class RegExConstraint extends Constraint {
+	public static serializer = sObject({})
+		.refine({
+			class: RegExConstraint,
+			fromIntermediate: (o) => new RegExConstraint(),
+			toIntermediate: (o) => ({}),
+		})
+		.defineAs(defaultConstraintNs("RegExConstraint"));
+
+	public validate(value: unknown): DeserializeError[] {
+		return [];
+	}
+}
 
 describe("schema", () => {
 	it("Test1", () => {
@@ -39,6 +75,14 @@ describe("schema", () => {
 			},
 		]);
 
-		console.log("test", JSON.stringify(result2, undefined, 4));
+		console.log(
+			"test",
+			JSON.stringify(
+				result2,
+				(key, value) =>
+					value instanceof BaseSerializer ? value.toString() : value,
+				4
+			)
+		);
 	});
 });

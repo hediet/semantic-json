@@ -4,6 +4,12 @@ import { DeserializeContext } from "../DeserializeContext";
 import { JSONValue } from "../../JSONValue";
 import { SerializeContext } from "../SerializeContext";
 import { getTypeMismatchMessage } from "../getTypeMismatchMessage";
+import {
+	LiteralSchemaDef,
+	NullSchemaDef,
+	SchemaDef,
+} from "../../schema/schemaDefs";
+import { SerializerSystem } from "../SerializerSystem";
 
 export type LiteralType = string | number | boolean | null;
 
@@ -48,5 +54,12 @@ export class LiteralSerializerImpl<T extends LiteralType>
 			);
 		}
 		return this.value;
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		if (this.value === null) {
+			return new NullSchemaDef();
+		}
+		return new LiteralSchemaDef(this.value!);
 	}
 }

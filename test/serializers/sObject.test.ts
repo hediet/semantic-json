@@ -1,12 +1,4 @@
-import {
-	sObject,
-	sString,
-	sBoolean,
-	sProp,
-	ObjectSerializerImpl,
-	Serializer,
-	BaseSerializer,
-} from "../../src";
+import { sObject, sString, sBoolean, prop } from "../../src";
 import { deepEqual } from "assert";
 import { deserializeJson } from "../utils";
 
@@ -14,8 +6,8 @@ describe("sObject", () => {
 	const serializer = sObject({
 		requiredStr: sString(),
 		requiredBool: sBoolean(),
-		optionalBool: sProp(sBoolean(), { optional: true }),
-		strWithDefaultValue: sProp(sString(), {
+		optionalBool: prop(sBoolean(), { optional: true }),
+		strWithDefaultValue: prop(sString(), {
 			optional: { withDefault: "myDefault" },
 		}),
 	});

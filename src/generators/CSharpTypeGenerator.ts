@@ -1,6 +1,6 @@
-import { Serializer, NamedSerializer } from "./serialization";
+import { Serializer, NamedSerializer } from "../serialization";
 
-export class TypeScriptDefinition {
+export class CSharpDefinition {
 	public get definingType(): string {
 		return this._definingType.value;
 	}
@@ -16,15 +16,43 @@ export class TypeScriptDefinition {
 	}
 }
 
-export class TypeScriptTypeGenerator {
+/*
+
+type A = X | Y -> Union<X, Y>
+
+class A {
+
+}
+
+class X : A {
+	XKind Kind { get; } = new XKind();
+}
+
+class BaseKind { }
+
+class XKind : BaseKind {
+	bool Ast { get; } = true;
+}
+
+class Y : A {
+}
+
+type A = X & Y -> Intersection<X, Y>
+
+
+
+*/
+
+/*
+export class CSharpTypeGenerator {
 	private readonly _definitions = new Map<
 		NamedSerializer<any>,
-		TypeScriptDefinition
+		CSharpDefinition
 	>();
 
 	public readonly definitions: ReadonlyMap<
 		NamedSerializer<any>,
-		TypeScriptDefinition
+		CSharpDefinition
 	> = this._definitions;
 
 	public getDefinitionSource(
@@ -89,9 +117,9 @@ export class TypeScriptTypeGenerator {
 						}: ${this._getType(prop.serializer, indentation + 1)};`;
 						if (prop.description) {
 							const lines = prop.description.split("\n");
-							result = `${indent}/**${lines.map(
+							result = `${indent}/ **${lines.map(
 								(l) => `${indent} * ${l}`
-							)}${indent} */${result}`;
+							)}${indent} * /${result}`;
 						}
 						return result;
 					})
@@ -116,3 +144,4 @@ export class TypeScriptTypeGenerator {
 		}
 	}
 }
+*/

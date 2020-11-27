@@ -6,6 +6,8 @@ import {
 } from "./DelegatingSerializerImpl";
 import { SerializeContext } from "../SerializeContext";
 import { JSONValue } from "../..";
+import { SerializerSystem } from "../SerializerSystem";
+import { SchemaDef } from "../../schema/schemaDefs";
 
 export interface LazySerializer extends DelegatingSerializer {
 	delegationKind: "lazy";
@@ -48,5 +50,9 @@ export class LazySerializerImpl<T>
 		context: SerializeContext
 	): JSONValue {
 		return this.underlyingSerializer.serialize(value, context);
+	}
+
+	public toSchema(serializerSystem: SerializerSystem): SchemaDef {
+		return this.underlyingSerializer.toSchema(serializerSystem);
 	}
 }

@@ -5,16 +5,23 @@ import {
 	sOpenObject,
 	sArrayOf,
 	sString,
-	sOptionalProp,
+	optionalProp,
 	sUnion,
 	sLiteral,
 	sBoolean,
-	sProp,
+	prop,
+	sTypePackage,
 } from "../src";
 import { namespace } from "../src/NamespacedNamed";
 import { deepEqual, deepStrictEqual } from "assert";
 
 describe("TypeScriptTypeGenerator", () => {
+	it("test", () => {
+		const g = new TypeScriptTypeGenerator();
+		const t = g.getType(sTypePackage);
+		debugger;
+	});
+
 	it("works", () => {
 		const g = new TypeScriptTypeGenerator();
 
@@ -23,8 +30,8 @@ describe("TypeScriptTypeGenerator", () => {
 				children: sArrayOf(sTreeNode),
 				items: sArrayOf(
 					sOpenObject({
-						text: sProp(sString(), { description: "The text" }),
-						emphasis: sOptionalProp(
+						text: prop(sString(), { description: "The text" }),
+						emphasis: optionalProp(
 							sUnion([
 								sLiteral("style1"),
 								sLiteral("style2"),
@@ -35,8 +42,8 @@ describe("TypeScriptTypeGenerator", () => {
 						),
 					})
 				),
-				segment: sOptionalProp(sString(), {}),
-				isMarked: sOptionalProp(sBoolean(), {}),
+				segment: optionalProp(sString(), {}),
+				isMarked: optionalProp(sBoolean(), {}),
 			}).defineAs(namespace("hediet.de/visualization")("node"))
 		);
 

@@ -6,19 +6,33 @@ import {
 	UnexpectedPropertyTree,
 } from "./DeserializeResult";
 import { NamespacedName, namespace } from "../NamespacedNamed";
-import { Serializer, NamedSerializer, SerializerOfKind } from "./Serializer";
+import { Serializer, NamedSerializer } from "./Serializer";
 import { fromEntries } from "../utils";
 import { SerializeContext } from "./SerializeContext";
 
+/**
+ * Represents the base class for all serializer implementations.
+ * Don't extend it outside this library!
+ * This class does not allow for easy reflection.
+ * Use the `Serialize<T>` type to get type narrowing!
+ */
 export abstract class BaseSerializer<T> {
 	public get T(): T {
 		throw new Error("Only for compile time");
 	}
 
+	/**
+	 * Casts this serializer to the union serializer type.
+	 * Sometimes, `BaseSerialize<T>` allows to avoid certain typescript type errors.
+	 * Use this method to go back to `Serialize<T>`.
+	 */
 	public asSerializer(): Serializer<T> {
 		return this as any;
 	}
 
+	/**
+	 * Converts the given json value to an instance of T.
+	 */
 	public deserialize(
 		source: JSONValue,
 		context: DeserializeContext = DeserializeContext.default
@@ -84,22 +98,18 @@ export abstract class BaseSerializer<T> {
 		return r;
 	}
 
+	/**
+	 * Creates a named serializer.
+	 * This does not change the semantics of the serializer.
+	 */
 	public defineAs(name: NamespacedName): NamedSerializer<T> {
-		return new NamedSerializerImpl(
-			(this as any) as Serializer<T>,
-			name,
-			true
-		);
+		return new NamedSerializerImpl((this as any) as Serializer<T>, name);
 	}
 
-	public knownAs(name: NamespacedName): NamedSerializer<T> {
-		return new NamedSerializerImpl<T>(
-			(this as any) as Serializer<T>,
-			name,
-			false
-		);
-	}
-
+	/**
+	 * Creates a new serializer that post-processes deserialized values
+	 * and preprocesses values that are about to be serialized.
+	 */
 	public refine<TNew>(refinement: Refinement<TNew, T>): Serializer<TNew> {
 		return new RefinedSerializerImpl<TNew, T>(this as any, refinement);
 	}
@@ -109,12 +119,19 @@ export abstract class BaseSerializer<T> {
 		context: DeserializeContext
 	): DeserializeResult<T>;
 
+	/**
+	 * Tests whether the given value can be serialized by this serializer.
+	 * If so, the value must be of type `T`.
+	 */
 	public canSerialize(value: unknown): value is T {
 		return this.internalCanSerialize(value);
 	}
 
 	protected abstract internalCanSerialize(value: unknown): value is T;
 
+	/**
+	 * Converts the given value to json.
+	 */
 	public serialize(value: T, context?: SerializeContext): JSONValue {
 		if (!context) {
 			context = new SerializeContext();
@@ -122,7 +139,7 @@ export abstract class BaseSerializer<T> {
 
 		let prefixesEnabled = context.prefixesEnabled;
 		if (!prefixesEnabled) {
-			context.prefixesEnabled = true;
+			context = new SerializeContext(true);
 		}
 
 		const result = this.internalSerialize(value, context);
@@ -140,8 +157,6 @@ export abstract class BaseSerializer<T> {
 						prefixes[prefix] = namespace;
 					}
 				}
-
-				context.prefixesEnabled = false;
 			}
 		}
 
@@ -152,6 +167,8 @@ export abstract class BaseSerializer<T> {
 		value: T,
 		context: SerializeContext
 	): JSONValue;
+
+	public abstract toSchema(serializerSystem: SerializerSystem): SchemaDef;
 }
 
 export abstract class BaseSerializerImpl<T, TInterface> extends BaseSerializer<
@@ -192,3 +209,5 @@ export type Refinement<T, TIntermediate> =
 	  };
 
 import { NamedSerializerImpl, RefinedSerializerImpl } from "./serializers";
+import { SchemaDef } from "../schema/schemaDefs";
+import { SerializerSystem } from "./SerializerSystem";

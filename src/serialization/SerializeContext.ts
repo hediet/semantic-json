@@ -1,9 +1,9 @@
 import { Namespace } from "../NamespacedNamed";
 
 export class SerializeContext {
-	public prefixesEnabled = false;
+	constructor(public readonly prefixesEnabled = false) {}
 
-	private key = 1;
+	private curKey = 1;
 	private readonly namespaces = new Map<string, string>();
 
 	public getPrefixForNamespace(ns: Namespace): string {
@@ -13,7 +13,7 @@ export class SerializeContext {
 
 		let prefix = this.namespaces.get(ns.namespace);
 		if (!prefix) {
-			prefix = `p${this.key++}`;
+			prefix = `p${this.curKey++}`;
 			this.namespaces.set(ns.namespace, prefix);
 		}
 		return prefix;
