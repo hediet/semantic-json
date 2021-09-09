@@ -168,6 +168,14 @@ export class ObjectSerializerImpl<T extends Record<string, unknown> = any>
 			}
 		}
 
+		if (this.allowUnknownProperties) {
+			for (const [k, v] of Object.entries(value)) {
+				if (!result.hasOwnProperty(k)) {
+					result[k] = v as JSONValue;
+				}
+			}
+		}
+
 		return result as any;
 	}
 
