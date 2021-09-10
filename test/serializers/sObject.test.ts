@@ -1,4 +1,4 @@
-import { sObject, sString, sBoolean, prop } from "../../src";
+import { sObject, sString, sBoolean, prop, sOpenObject } from "../../src";
 import { deepEqual } from "assert";
 import { deserializeJson } from "../utils";
 
@@ -137,6 +137,22 @@ describe("sObject", () => {
 				requiredBool: true,
 				requiredStr: "test",
 				strWithDefaultValue: "myDefault",
+			});
+		});
+
+		it("serializes unknown properties", () => {
+			const serializer = sOpenObject<any>({
+				knownObject: sObject({ foo: sString() }),
+			}, { allowUnknownProperties: true });
+
+			const json = serializer.serialize({
+				knownObject: { foo: 'a', bar: 'b' },
+				baz: 'c'
+			});
+
+			deepEqual(json, {
+				knownObject: { foo: 'a' },
+				baz: 'c'
 			});
 		});
 	});
